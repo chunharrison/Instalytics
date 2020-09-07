@@ -5,6 +5,8 @@ const Test = () => {
 
       const [accessToken, setAccessToken] = useState('') 
       const [userId, setUserId] = useState('') 
+      const [pageId, setPageId] = useState('')
+      const [businessAccountId, setBusinessAccountId] = useState('')
 
       function handleFBLogin(e) {
           e.preventDefault()
@@ -17,7 +19,16 @@ const Test = () => {
              } else {
               console.log('User cancelled login or did not fully authorize.');
              }
-          }, {scope: 'pages_messaging,pages_show_list,pages_read_engagement,instagram_basic,instagram_manage_insights,read_insights'});
+          }, {scope: `
+                        pages_messaging,
+                        pages_show_list,
+                        pages_read_engagement,
+                        instagram_basic,
+                        instagram_manage_insights,
+                        read_insights,
+                        business_management,
+                        ads_management
+                      `});
         }
 
     function handleLoginStatus(e) {
@@ -47,33 +58,38 @@ const Test = () => {
         })
     }
 
-    function getFollows(e) {
+    function func1(e) {
       e.preventDefault()
       
-      window.FB.api(
-        '/me/accounts',
-        'GET',
-        function(response) {
-            console.log(response)
+      window.FB.api('/me/accounts', 'GET', function(response) {
+          setPageId(response.data.id)
         }
       );
     }
 
-    function getThePagesInstagramBusinessAccount(e) {
+    function func2(e) {
       e.preventDefault()
 
-      window.FB.api('/me', function(response) {
-        console.log(response);
-      });
+      window.FB.api(`/${pageId}`, 'GET', {
+          "fields": "instagram_business_account"
+        }, function(response) {
+          businessAccountId(response.instagram_business_account.id)
+        }
+      );
+    }
+
+    function func3(e) {
+      e.preventDefault()
+      
     }
 
     return (
         <div>
             <button onClick={e => handleFBLogin(e)}>login</button>
-            <button onClick={e => handleLoginStatus(e)}>handleLoginStatus</button>
             <button onClick={e => window.FB.logout()}>logout</button>
-            <button onClick={e => getFollows(e)}>testFunction</button>
-            <button onClick={e => getThePagesInstagramBusinessAccount(e)}>testFunction2</button>
+            <button onClick={e => handleLoginStatus(e)}>handleLoginStatus</button>
+            <button onClick={e => func1(e)}>GET /me/accounts</button>
+            <button onClick={e => func2(e)}>testFunction2</button>
         </div>
     )
 }

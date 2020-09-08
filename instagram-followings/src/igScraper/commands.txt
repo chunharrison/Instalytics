@@ -1,9 +1,0 @@
-get list of people being followed by user:
-instagram-scraper 
-	--followings-input 
-	--login-user harb.chun.industries --login-pass fhrmaldls1 
-	--followings-output followings.txt 
-	--media-types none
-
-
-instagram-scraper --followings-input --login-user harb.chun.industries --login-pass fhrmaldls1 --followings-output followings.txt --media-types none --media-metadata --latest

@@ -365,9 +365,9 @@ app.get('/api/start_instalytics', (req, res) => {
 
             retreivedData.push({
                 username: username,
-                averageLikes: (numLikes / numMedia).toFixed(2), 
-                averageComments: (numComments / numMedia).toFixed(2), 
-                averageViews: (numViews / numVideos).toFixed(2),
+                averageLikes: ((numLikes / numMedia) * 100).toFixed(2), 
+                averageComments: ((numComments / numMedia) * 100).toFixed(2), 
+                averageViews: ((numViews / numVideos) * 100).toFixed(2),
                 LFR: ((numLikes / numMedia) / numFollowers).toFixed(2),
                 LCR: ((numComments / numMedia) / numFollowers).toFixed(3),
                 LVR: ((numViews / numVideos) / numFollowers).toFixed(2)
@@ -376,6 +376,34 @@ app.get('/api/start_instalytics', (req, res) => {
 
         res.send(retreivedData) 
     });
+})
+
+app.get('/api/top_5_posts', (req, res) => {
+    console.log('performing top_5_posts!')
+
+    let mediaMetadata = require(`./${req.query.logged_in_username}/${req.query.target_username}`)
+
+    if (mediaMetadata) {
+        let metadataList = mediaMetadata.GraphImages
+        metadataList.sort((a,b) => (a.edge_media_preview_like.count <= b.edge_media_preview_like.count) ? 1 : -1)
+        
+        let dataToSend = []
+        for (let i = 0; i < metadataList.length; i++) {
+            if (i === 4) {
+                res.send(dataToSend)
+            }
+
+            const currentMetadata = metadataList[i]
+            dataToSend.push({
+                images: currentMetadata.urls,
+                likes: currentMetadata.edge_media_preview_like.count,
+                comments: currentMetadata.edge_media_to_comment.count,
+                caption: edge_media_to_caption.edges[0].node.text,
+                date: currentMetadata.taken_at_timestamp,
+            })
+        }
+        res.send(dataToSend)
+    }
 })
 
 app.listen(port, () => console.log(`Listening on port ${port}!`))

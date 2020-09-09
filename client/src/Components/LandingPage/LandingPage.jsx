@@ -135,7 +135,17 @@ const LandingPage = props => {
     function refresh(e) {
         e.preventDefault()
 
-        console.log(localStorage.getItem('Instalytics_User'))
+        const getDataOptions = {
+            params: {
+                username: username
+            },
+            headers: {
+                'Access-Control-Allow-Credentials': true,
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET',
+                'Access-Control-Allow-Headers': '*',
+            },
+        }
     }
 
     // add user

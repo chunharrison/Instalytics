@@ -81,6 +81,7 @@ const LandingPage = props => {
             },
         }
 
+        console.log('calling store-metadata')
         axios.get('http://localhost:5000/api/store-metadata', options)
             .then(res => {
                 if (res.data === 'success') {

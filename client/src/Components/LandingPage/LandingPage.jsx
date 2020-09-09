@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react' 
-import { ResponsiveContainer, LineChart, Line } from 'recharts';
+import { ResponsiveContainer, BarChart, LineChart, Line, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
 
 import axios from 'axios'
 
@@ -7,19 +7,18 @@ import './LandingPage.css';
 
 const LandingPage = props => {
     const [loggedIn, setLoggedIn] = useState(false)
-    const [username, setUsername] = useState('')
+    const [username, setUsername] = useState('cosign.pro')
     const [password, setPassword] = useState('')
     const [currentUser, setCurrentUser] = useState('')
     const canvasElement = useRef(null);
     const [context, setContext] = useState(null)
-    const [searched, setSearched] = useState(false);
+    const [searched, setSearched] = useState(true);
     const [data, setData] = useState([]);
     let time = 0;
 
     useEffect(() => {
         setContext(canvasElement.current.getContext('2d'));
         const users = localStorage.getItem('Instalytics_Users');
-        if (users !== null && users !== []) setLoggedIn(true);
     }, [])
 
     useEffect(() => {
@@ -27,6 +26,16 @@ const LandingPage = props => {
         startAnimation();
     }, [context])
 
+    function compare( a, b ) {
+        if ( Number(a.averageLikes) < Number(b.averageLikes) || a.averageLikes === 'NaN' ){
+          return 1;
+        }
+        if ( Number(a.averageLikes) > Number(b.averageLikes) || b.averageLikes === 'Nan'){
+          return -1;
+        }
+        return 0;
+    }
+      
     function color (x, y, r, g, b) {
         if (!canvasElement || !context) return;
         context.fillStyle = `rgb(${r}, ${g}, ${b})`
@@ -63,10 +72,27 @@ const LandingPage = props => {
         setPassword(e.target.value)
     }
 
+    function getData() {
+        const getDataOptions = {
+            params: {
+                username: username
+            },
+            headers: {
+                'Access-Control-Allow-Credentials': true,
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET',
+                'Access-Control-Allow-Headers': '*',
+            },
+        }
+        axios.get('http://localhost:5000/api/start_instalytics', getDataOptions)
+            .then(res => {
+                console.log(res.data);
+                setData(res.data)
+            })
+    }
+ 
     function handleSubmit(e) {
         e.preventDefault()
-        
-        setSearched(true);
 
         const options = {
             params: {
@@ -84,24 +110,32 @@ const LandingPage = props => {
         console.log('calling store-metadata')
         axios.get('http://localhost:5000/api/store-metadata', options)
             .then(res => {
-                if (res.data === 'success') {
-                    setLoggedIn(true)
-
-                    // add username to the username list in localStorage 
-                    const users = localStorage.getItem('Instalytics_Users');
-                    if (users === null) {
-                        localStorage.setItem('Instalytics_Users', [username]);
-                    } else {
-                        users.push(username)
-                        localStorage.setItem('Instalytics_Users', users)
-                    }
+                console.log(res)
+                setSearched(true);
+                console.log(res);
+                getData();
+                // add username to the username list in localStorage 
+                const user = localStorage.getItem('Instalytics_User');
+                if (user === null || user === '') {
+                    localStorage.setItem('Instalytics_User', username);
+                } else {
+                    // check to see if the backend has the data corresponding to the username in the localstorage
                 }
                 
-            })
+                
+        }).catch(res => {
+            if (res.response) {
+                console.log(res.response.data.message)
+            } else {
+                console.log(res)
+            }
+        })
     }
 
     function refresh(e) {
         e.preventDefault()
+
+        console.log(localStorage.getItem('Instalytics_User'))
     }
 
     // add user
@@ -240,6 +274,8 @@ const LandingPage = props => {
         console.log(users)
     }
 
+    let max = Math.max.apply(Math, data.map(function(entry) { if (entry.averageLikes !== 'NaN') {return Number(entry.averageLikes);} else {return 0} }))
+
     return (
         <div className='search-page-container'>
             <div className='nav'>
@@ -258,17 +294,14 @@ const LandingPage = props => {
                 }
             </div>
             <div className='search-page-data-container' style={{display: `${searched ? '' : 'none'}`}}>
-                <ResponsiveContainer className='search-page-data' width={700} height="35%">
-                    <LineChart data={data}>
-                        <Line type="monotone" dataKey="uv" stroke="#8884d8" isAnimationActive={false}/>
-                    </LineChart>
+                <ResponsiveContainer className='search-page-data' width={900} height="55%">
+                    <BarChart data={data.sort(compare)} layout='vertical' margin={{ top: 10, left: 10, right: 10, bottom: 10 }}>
+                        <YAxis type='category' dataKey="username" width={150}/>
+                        <XAxis type='number' domain={[0, max]} allowDecimals={false}/>
+                        <Bar dataKey="averageLikes" fill="#8884d8"/>
+                    </BarChart>
                 </ResponsiveContainer>
-                <ResponsiveContainer className='search-page-data' width={700} height="35%">
-                <LineChart data={data} >
-                    <Line type="monotone" dataKey="likes" stroke="#8884d8" isAnimationActive={false}/>
-                </LineChart>
-                </ResponsiveContainer>
-
+                <button onClick={e => getData()}>getData</button>
             </div>
         </div>
     )

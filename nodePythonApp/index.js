@@ -11,7 +11,11 @@ app.use(cors())
 
 app.get('/api/store-metadata', (req, res) => {
     var dataToSend;
-    
+
+    if (req.query.login_user === '') {
+        return res.status(400).send({message: 'Incorrect password or usernames'});
+    }
+
     console.log(req.query.login_user, req.query.login_pass)
 
     mkdirp(`./${req.query.login_user}`)
@@ -24,13 +28,13 @@ app.get('/api/store-metadata', (req, res) => {
         console.log(`child process close all stdio with code ${code}`);
 
         const files = fs.readdirSync(`./${req.query.login_user}/`)
-            
+        console.log(files)
         if (files.length === 0) {
             rimraf.sync(`./${req.query.login_user}`)
-            res.send('fail')
+            res.status(400).send({message: 'Incorrect password or username'})
         }
         else {
-            res.send('success')
+            res.status(200).send()
         }
     });
     
@@ -350,8 +354,9 @@ app.get('/api/start_instalytics', (req, res) => {
             let numVideos = 0 // total number of posts that are videos
             // loop through the retrieved metadata of medias
             mediaMetadata.GraphImages.forEach(media => {
+                numLikes += media.edge_media_preview_like.count
+                numComments += media.edge_media_to_comment.count
                 if (media.is_video) {
-                    numComments += media.edge_media_to_comment.count
                     numViews += media.video_view_count
                     numVideos++
                 }
@@ -369,7 +374,7 @@ app.get('/api/start_instalytics', (req, res) => {
             })
         })
 
-        res.send(sorted) 
+        res.send(retreivedData) 
     });
 })
 

@@ -9,4 +9,5 @@ subprocess.check_output(['instagram-scraper',
                             '--media-types', 'none',
                             '--media-metadata',
                             '--maximum', '20',
+                            '--profile-metadata',
                             '--latest'])

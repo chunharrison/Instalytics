@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react' 
-import { ResponsiveContainer, BarChart, LineChart, Line, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
+import { ResponsiveContainer, BarChart, LineChart, Line, XAxis, YAxis, Tooltip, Legend, Bar, Cell } from 'recharts';
+import Dropdown from 'react-dropdown';
+import 'react-dropdown/style.css';
 
 import axios from 'axios'
 
@@ -14,6 +16,10 @@ const LandingPage = props => {
     const [context, setContext] = useState(null)
     const [searched, setSearched] = useState(true);
     const [data, setData] = useState([]);
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [activeData, setActiveData] = useState(0);
+    const [activeValue, setActiveValue] = useState('averageLikes');
+    const [dataKey, setDataKey] = useState(1)
     let time = 0;
 
     useEffect(() => {
@@ -26,11 +32,17 @@ const LandingPage = props => {
         startAnimation();
     }, [context])
 
+    useEffect(() => {
+        if (!activeValue) return;
+        setData(data.sort(compare))
+        setDataKey(dataKey + 1)
+    }, [activeValue])
+
     function compare( a, b ) {
-        if ( Number(a.averageLikes) < Number(b.averageLikes) || a.averageLikes === 'NaN' ){
+        if ( Number(a[activeValue]) < Number(b[activeValue]) || a[activeValue] === 'NaN' ){
           return 1;
         }
-        if ( Number(a.averageLikes) > Number(b.averageLikes) || b.averageLikes === 'Nan'){
+        if ( Number(a[activeValue]) > Number(b[activeValue]) || b[activeValue] === 'NaN'){
           return -1;
         }
         return 0;
@@ -86,8 +98,9 @@ const LandingPage = props => {
         }
         axios.get('http://localhost:5000/api/start_instalytics', getDataOptions)
             .then(res => {
-                console.log(res.data);
-                setData(res.data)
+                let sortedData = res.data.sort(compare);
+                setData(sortedData);
+                setActiveData(sortedData[0]);
             })
     }
  
@@ -110,9 +123,7 @@ const LandingPage = props => {
         console.log('calling store-metadata')
         axios.get('http://localhost:5000/api/store-metadata', options)
             .then(res => {
-                console.log(res)
                 setSearched(true);
-                console.log(res);
                 getData();
                 // add username to the username list in localStorage 
                 const user = localStorage.getItem('Instalytics_User');
@@ -284,8 +295,27 @@ const LandingPage = props => {
         console.log(users)
     }
 
-    let max = Math.max.apply(Math, data.map(function(entry) { if (entry.averageLikes !== 'NaN') {return Number(entry.averageLikes);} else {return 0} }))
+    function handleBarChartClick(data, index) {
+        setActiveIndex(data.activeTooltipIndex);
+        setActiveData(data.activePayload[0].payload)
+        console.log(data.activePayload[0].payload)
+    }
 
+    function handleSort(e) {
+        console.log(e)
+        setActiveValue(e.value)
+    }
+
+    console.log(data)
+    let max = Math.max.apply(Math, data.map(function(entry) { if (entry[activeValue] !== 'NaN') {return Number(entry[activeValue]);} else {return 0} }))
+    const options = [
+        { value: 'averageLikes', label: 'Average Likes' },
+        { value: 'averageViews', label: 'Average Views' },
+        { value: 'averageComments', label: 'Average Comments' },
+        { value: 'LVR', label: 'Like to Views Ratio' },
+        { value: 'LFR', label: 'Like to Follower Ratio' },
+        { value: 'LCR', label: 'Like to Comment Ratio' },
+    ]
     return (
         <div className='search-page-container'>
             <div className='nav'>
@@ -304,13 +334,32 @@ const LandingPage = props => {
                 }
             </div>
             <div className='search-page-data-container' style={{display: `${searched ? '' : 'none'}`}}>
+                {data ?
                 <ResponsiveContainer className='search-page-data' width={900} height="55%">
-                    <BarChart data={data.sort(compare)} layout='vertical' margin={{ top: 10, left: 10, right: 10, bottom: 10 }}>
-                        <YAxis type='category' dataKey="username" width={150}/>
-                        <XAxis type='number' domain={[0, max]} allowDecimals={false}/>
-                        <Bar dataKey="averageLikes" fill="#8884d8"/>
-                    </BarChart>
+                    
+                        <BarChart data={data} layout='vertical' key={dataKey} margin={{ top: 10, left: 10, right: 10, bottom: 10 }} onClick={(data, index) => handleBarChartClick(data, index)}>
+                            <YAxis type='category' dataKey="username" width={150}/>
+                            <XAxis type='number' domain={[0, max]} allowDecimals={false} height={60}/>
+                            <Tooltip/>
+                            <Bar dataKey={activeValue}>
+                                {
+                                    data.map((entry, index) => (
+                                        <Cell cursor="pointer" fill={index === activeIndex ? '#82ca9d' : '#8884d8' } key={`cell-${index}`}/>
+                                    ))
+                                }
+                            </Bar>
+                        </BarChart>
                 </ResponsiveContainer>
+                : 
+                null}
+
+                <Dropdown options={options} onChange={(e) => handleSort(e)} value={activeValue} placeholder="Select an option" />
+                <div>average likes: {activeData.averageLikes}</div>
+                <div>average views: {activeData.averageViews}</div>
+                <div>average comments: {activeData.averageComments}</div>
+                <div>likes to views ratio: {activeData.LVR}</div>
+                <div>likes to follower ratio: {activeData.LFR}</div>
+                <div>likes to comments ratio: {activeData.LCR}</div>
                 <button onClick={e => getData()}>getData</button>
             </div>
         </div>

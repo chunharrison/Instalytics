@@ -9,6 +9,7 @@
     "axios": "^0.20.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "react-dropdown": "^1.8.0",
     "react-scripts": "3.4.3",
     "recharts": "^1.8.5"
   },

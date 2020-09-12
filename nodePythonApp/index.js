@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const {spawn} = require('child_process');
 const app = express()
@@ -5,9 +6,183 @@ const cors = require('cors')
 const fs = require('fs');
 const mkdirp = require('mkdirp')
 const rimraf = require("rimraf");
+const nodemailer = require('nodemailer');
 const port = 5000
 
 app.use(cors())
+
+function sendEmail(respondentEmail, respondentUsername) {
+  console.log('sendEmail', respondentEmail, respondentUsername)
+  console.log(process.env.MAILER_LOGIN, process.env.MAILER_PASSWORD)
+    var smtpTransport = nodemailer.createTransport({
+        service: 'Gmail',
+        port: 465,
+        auth: {
+            user: process.env.MAILER_LOGIN,
+            pass: process.env.MAILER_PASSWORD
+        }
+    });
+
+    var mailOptions = {
+        from: process.env.MAILER_LOGIN,
+        to: respondentEmail,
+        subject: 'Instlytics: data fetching completed!',
+        html: `<html xmlns="http://www.w3.org/1999/xhtml">
+ 
+        <head>
+          <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+          <title>A Simple Responsive HTML Email</title>
+          <style type="text/css">
+          body {margin: 0; padding: 0; min-width: 100%!important;}
+          img {height: auto;}
+          .content {width: 100%; max-width: 600px;}
+          .header {padding: 40px 30px 20px 30px;}
+          .innerpadding {padding: 30px 30px 30px 30px;}
+          .borderbottom {border-bottom: 1px solid #f2eeed;}
+          .subhead {font-size: 15px; color: #ffffff; font-family: sans-serif; letter-spacing: 10px;}
+          .h1, .h2, .bodycopy {color: #153643; font-family: sans-serif;}
+          .h1 {font-size: 33px; line-height: 38px; font-weight: bold;}
+          .h2 {padding: 0 0 15px 0; font-size: 24px; line-height: 28px; font-weight: bold;}
+          .bodycopy {font-size: 16px; line-height: 22px;}
+          .button {text-align: center; font-size: 18px; font-family: sans-serif; font-weight: bold; padding: 0 30px 0 30px;}
+          .button a {color: #ffffff; text-decoration: none;}
+          .footer {padding: 20px 30px 15px 30px;}
+          .footercopy {font-family: sans-serif; font-size: 14px; color: #ffffff;}
+          .footercopy a {color: #ffffff; text-decoration: underline;}
+        
+          @media only screen and (max-width: 550px), screen and (max-device-width: 550px) {
+          body[yahoo] .hide {display: none!important;}
+          body[yahoo] .buttonwrapper {background-color: transparent!important;}
+          body[yahoo] .button {padding: 0px!important;}
+          body[yahoo] .button a {background-color: #e05443; padding: 15px 15px 13px!important;}
+          body[yahoo] .unsubscribe {display: block; margin-top: 20px; padding: 10px 50px; background: #2f3942; border-radius: 5px; text-decoration: none!important; font-weight: bold;}
+          }
+        
+          /*@media only screen and (min-device-width: 601px) {
+            .content {width: 600px !important;}
+            .col425 {width: 425px!important;}
+            .col380 {width: 380px!important;}
+            }*/
+        
+          </style>
+        </head>
+        
+        <body yahoo bgcolor="#f6f8f1">
+        <table width="100%" bgcolor="#f6f8f1" border="0" cellpadding="0" cellspacing="0">
+        <tr>
+          <td>
+            <!--[if (gte mso 9)|(IE)]>
+              <table width="600" align="center" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td>
+            <![endif]-->     
+            <table bgcolor="#ffffff" class="content" align="center" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td bgcolor="#c7d8a7" class="header">
+                  <table width="70" align="left" border="0" cellpadding="0" cellspacing="0">  
+                    <tr>
+                      <td height="70" style="padding: 0 20px 20px 0;">
+                        <img class="fix" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/210284/icon.gif" width="70" height="70" border="0" alt="" />
+                      </td>
+                    </tr>
+                  </table>
+                  <!--[if (gte mso 9)|(IE)]>
+                    <table width="425" align="left" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td>
+                  <![endif]-->
+                  <table class="col425" align="left" border="0" cellpadding="0" cellspacing="0" style="width: 100%; max-width: 425px;">  
+                    <tr>
+                      <td height="70">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td class="subhead" style="padding: 0 0 0 3px;">
+                              INSTALYTICS
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="h1" style="padding: 5px 0 0 0;">
+                              We Got The Data!
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                  <!--[if (gte mso 9)|(IE)]>
+                        </td>
+                      </tr>
+                  </table>
+                  <![endif]-->
+                </td>
+              </tr>
+              <tr>
+                <td class="innerpadding borderbottom">
+                  <table width="115" align="left" border="0" cellpadding="0" cellspacing="0">  
+                    <tr>
+                      <td height="115" style="padding: 0 20px 20px 0;">
+                        <img class="fix" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/210284/article1.png" width="115" height="115" border="0" alt="" />
+                      </td>
+                    </tr>
+                  </table>
+                  <!--[if (gte mso 9)|(IE)]>
+                    <table width="380" align="left" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td>
+                  <![endif]-->
+                  <table class="col380" align="left" border="0" cellpadding="0" cellspacing="0" style="width: 100%; max-width: 380px;">  
+                    <tr>
+                      <td>
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td class="bodycopy">
+                              We have everything that you need to help you start snooping around your followings' data for the account: ${respondentUsername}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 20px 0 0 0;">
+                              <table class="buttonwrapper" bgcolor="#e05443" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                  <td class="button" height="45">
+                                    <a href="${process.env.FRONTEND_ADDRESS}/?username=${respondentUsername}">Go see the data!</a>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                  <!--[if (gte mso 9)|(IE)]>
+                        </td>
+                      </tr>
+                  </table>
+                  <![endif]-->
+                </td>
+              </tr>
+            </table>
+            <!--[if (gte mso 9)|(IE)]>
+                  </td>
+                </tr>
+            </table>
+            <![endif]-->
+            </td>
+          </tr>
+        </table>
+        </body>
+        </html>`
+    }
+
+    smtpTransport.sendMail(mailOptions, (error, response) => {
+      if (error) console.log(error)
+      else console.log(response)
+    })
+}
+
+app.get('/api/test-email', (req, res) => {
+  sendEmail(req.query.email, req.query.uname)
+})
 
 app.get('/api/store-metadata', (req, res) => {
     var dataToSend;
@@ -18,7 +193,7 @@ app.get('/api/store-metadata', (req, res) => {
 
     console.log(req.query.login_user, req.query.login_pass)
 
-    mkdirp(`./${req.query.login_user}`)
+    mkdirp(`./data/${req.query.login_user}`)
 
     // spawn new child process to call the python script
     const python = spawn('python', ['getData.py', req.query.login_user, req.query.login_pass]);
@@ -27,312 +202,50 @@ app.get('/api/store-metadata', (req, res) => {
     python.on('close', (code) => {
         console.log(`child process close all stdio with code ${code}`);
 
-        const files = fs.readdirSync(`./${req.query.login_user}/`)
+        const files = fs.readdirSync(`./data/${req.query.login_user}/`)
         console.log(files)
         if (files.length === 0) {
-            rimraf.sync(`./${req.query.login_user}`)
+            rimraf.sync(`./data/${req.query.login_user}`)
+
             res.status(400).send({message: 'Incorrect password or username'})
         }
         else {
             res.status(200).send()
+            console.log(req.query.sendEmail)
+            if (req.query.sendEmail) {
+              console.log('sending email...')
+              // sendEmail(req.query.login_user, req.query.email)
+            }
         }
     });
     
 })
 
-app.get('/api/followers_to_likes', (req, res) => {
-    console.log('performing followers_to_likes!')
-    
-    fs.readdir(`./${req.query.username}/`, (err, files) => {
-        // key = userName, value = Like Follower Ratio
-        let retreivedData = {} 
+app.get('/api/check-username', (req, res) => {
+    console.log('performing check-username')
 
-        // loop through all the users that this person follows
-        files.forEach(mediaMetadataJSON => {
-            let mediaMetadata = require(`./${req.query.username}/${mediaMetadataJSON}`) // parse the media metadata json file 
-            
-            const numFollowers = mediaMetadata.GraphProfileInfo.info.followers_count // number of followers
-            const username = mediaMetadata.GraphProfileInfo.username // username
+    const dirCheck = './data/' + req.query.username
 
-            if (mediaMetadata.GraphImages === undefined) { 
-                retreivedData[username] = 'NaN'
-                return 
-            }
-
-            const numMedia = mediaMetadata.GraphImages.length // number of medias retreived
-            let numLikes = 0 // total number of likes for this specific user
-            // loop through the retrieved metadata of medias
-            mediaMetadata.GraphImages.forEach(media => {
-                numLikes += media.edge_media_preview_like.count
-            })
-            retreivedData[username] = ((numLikes / numMedia) / numFollowers).toFixed(2);
-        })
-        
-        let sorted = []
-        for (var username in retreivedData) {
-            sorted.push([username, retreivedData[username]]);
-        }
-        sorted.sort(function(a, b) {
-            return b[1] - a[1];
-        });
-        // change to [{}, {}, ...]
-        for(let i = 0; i < sorted.length; i++) {
-            const newEntryFormat = {name: sorted[i][0], LFR: sorted[i][1]}
-            sorted[i] = newEntryFormat
-        }
-
-        console.log(sorted)
-        res.send(sorted) 
-    });
-})
-
-app.get('/api/followers_to_comments', (req, res) => {
-    console.log('performing followers_to_comments!')
-    
-    fs.readdir(`./${req.query.username}/`, (err, files) => {
-        // key = userName, value = Comment Follower Ratio
-        let retreivedData = {} 
-
-        // loop through all the users that this person follows
-        files.forEach(mediaMetadataJSON => {
-            let mediaMetadata = require(`./${req.query.username}/${mediaMetadataJSON}`) // parse the media metadata json file 
-
-            const numFollowers = mediaMetadata.GraphProfileInfo.info.followers_count // number of followers
-            const username = mediaMetadata.GraphProfileInfo.username // username
-
-            if (mediaMetadata.GraphImages === undefined) { 
-                retreivedData[username] = 'NaN'
-                return 
-            }
-
-            const numMedia = mediaMetadata.GraphImages.length // number of medias retreived
-            let numComments = 0 // total number of comments for this specific user
-            // loop through the retrieved metadata of medias
-            mediaMetadata.GraphImages.forEach(media => {
-                numComments += media.edge_media_to_comment.count
-            })
-            retreivedData[username] = ((numComments / numMedia) / numFollowers).toFixed(3);
-        })
-        
-        let sorted = []
-        for (var username in retreivedData) {
-            sorted.push([username, retreivedData[username]]);
-        }
-        sorted.sort(function(a, b) {
-            return b[1] - a[1];
-        });
-        // change to [{}, {}, ...]
-        for(let i = 0; i < sorted.length; i++) {
-            const newEntryFormat = {name: sorted[i][0], LCR: sorted[i][1]}
-            sorted[i] = newEntryFormat
-        }
-
-        console.log(sorted)
-        res.send(sorted) 
-    });
-})
-
-app.get('/api/followers_to_views', (req, res) => {
-    console.log('performing followers_to_views!')
-    
-    fs.readdir(`./${req.query.username}/`, (err, files) => {
-        // key = userName, value = Views Follower Ratio
-        let retreivedData = {} 
-
-        // loop through all the users that this person follows
-        files.forEach(mediaMetadataJSON => {
-            let mediaMetadata = require(`./${req.query.username}/${mediaMetadataJSON}`) // parse the media metadata json file 
-
-            const numFollowers = mediaMetadata.GraphProfileInfo.info.followers_count // number of followers
-            const username = mediaMetadata.GraphProfileInfo.username
-
-            if (mediaMetadata.GraphImages === undefined) { 
-                retreivedData[username] = 'NaN'
-                return 
-            }
-
-            let numViews = 0 // total number of views for this specific user
-            let numVideos = 0
-            // loop through the retrieved metadata of medias
-            mediaMetadata.GraphImages.forEach(media => {
-                if (media.is_video) {
-                    numViews += media.video_view_count
-                    numVideos++
-                }
-            })
-            retreivedData[username] = ((numViews / numVideos) / numFollowers).toFixed(2);
-        })
-        
-        let sorted = []
-        for (var username in retreivedData) {
-            sorted.push([username, retreivedData[username]]);
-        }
-        sorted.sort(function(a, b) {
-            return b[1] - a[1];
-        });
-        // change to [{}, {}, ...]
-        for(let i = 0; i < sorted.length; i++) {
-            const newEntryFormat = {name: sorted[i][0], LVR: sorted[i][1]}
-            sorted[i] = newEntryFormat
-        }
-
-        console.log(sorted)
-        res.send(sorted) 
-    });
-})
-
-app.get('/api/average_likes', (req, res) => {
-    console.log('performing average_likes!')
-    
-    fs.readdir(`./${req.query.username}/`, (err, files) => {
-        // key = userName, value = average likes of their posts
-        let retreivedData = {} 
-
-        // loop through all the users that this person follows
-        files.forEach(mediaMetadataJSON => {
-            let mediaMetadata = require(`./${req.query.username}/${mediaMetadataJSON}`) // parse the media metadata json file 
-
-            const username = mediaMetadata.GraphProfileInfo.username
-            if (mediaMetadata.GraphImages === undefined) { 
-                retreivedData[username] = 'NaN'
-                return 
-            }
-
-            const numMedia = mediaMetadata.GraphImages.length // number of medias retreived
-            let numLikes = 0 // total number of likes for this specific user
-            // loop through the retrieved metadata of medias
-            mediaMetadata.GraphImages.forEach(media => {
-                numLikes += media.edge_media_preview_like.count
-            })
-            retreivedData[username] = (numLikes / numMedia).toFixed(2);
-        })
-        
-        let sorted = []
-        for (var username in retreivedData) {
-            sorted.push([username, retreivedData[username]]);
-        }
-        sorted.sort(function(a, b) {
-            return b[1] - a[1];
-        });
-        // change to [{}, {}, ...]
-        for(let i = 0; i < sorted.length; i++) {
-            const newEntryFormat = {name: sorted[i][0], likes: sorted[i][1]}
-            sorted[i] = newEntryFormat
-        }
-
-        console.log(sorted)
-        res.send(sorted) 
-    });
-})
-
-app.get('/api/average_comments', (req, res) => {
-    console.log('performing average_comments!')
-
-    fs.readdir(`./${req.query.username}/`, (err, files) => {
-        // key = userName, value = average comments of their posts
-        let retreivedData = {} 
-
-        // loop through all the users that this person follows
-        files.forEach(mediaMetadataJSON => {
-            let mediaMetadata = require(`./${req.query.username}/${mediaMetadataJSON}`) // parse the media metadata json file 
-
-            const username = mediaMetadata.GraphProfileInfo.username
-            if (mediaMetadata.GraphImages === undefined) { 
-                retreivedData[username] = 'NaN'
-                return 
-            }
-
-            const numMedia = mediaMetadata.GraphImages.length // number of medias retreived
-
-            let numComments = 0 // total number of comments for this specific user
-            // loop through the retrieved metadata of medias
-            mediaMetadata.GraphImages.forEach(media => {
-                numComments += media.edge_media_to_comment.count
-            })
-            retreivedData[username] = (numComments / numMedia).toFixed(2);
-        })
-        
-        let sorted = []
-        // change {} to [[], [], ...]
-        for (var username in retreivedData) {
-            sorted.push([username, retreivedData[username]]);
-        }
-        // sort
-        sorted.sort(function(a, b) {
-            return b[1] - a[1];
-        });
-        // [[], [], ...] change to [{}, {}, ...]
-        for(let i = 0; i < sorted.length; i++) {
-            const newEntryFormat = {name: sorted[i][0], comments: sorted[i][1]}
-            sorted[i] = newEntryFormat
-        }
-
-        console.log(sorted)
-        res.send(sorted) 
-    });
-})
-
-app.get('/api/average_views', (req, res) => {
-    console.log('performing average_views!')
-    
-    fs.readdir(`./${req.query.username}/`, (err, files) => {
-        // key = userName, value = average views of their posts
-        let retreivedData = {}
-
-        // loop through all the users that this person follows
-        files.forEach(mediaMetadataJSON => {
-            let mediaMetadata = require(`./${req.query.username}/${mediaMetadataJSON}`) // parse the media metadata json file 
-
-            const username = mediaMetadata.GraphProfileInfo.username
-            if (mediaMetadata.GraphImages === undefined) { 
-                retreivedData[username] = 'NaN'
-                return 
-            }
-
-            let numViews = 0 // total number of views for this specific user
-            let numVideos = 0 // total number of posts that are videos
-            // loop through the retrieved metadata of medias
-            mediaMetadata.GraphImages.forEach(media => {
-                if (media.is_video) {
-                    numViews += media.video_view_count
-                    numVideos++
-                }
-            })
-            retreivedData[username] = (numViews / numVideos).toFixed(2);
-        })
-        
-        let sorted = []
-        // change {} to [[], [], ...]
-        for (var username in retreivedData) {
-            sorted.push([username, retreivedData[username]]);
-        }
-        // sort
-        sorted.sort(function(a, b) {
-            return b[1] - a[1];
-        });
-        // [[], [], ...] change to [{}, {}, ...]
-        for(let i = 0; i < sorted.length; i++) {
-            const newEntryFormat = {name: sorted[i][0], views: sorted[i][1]}
-            sorted[i] = newEntryFormat
-        }
-
-        console.log(sorted)
-        res.send(sorted) 
-    });
+    if (fs.existsSync(dirCheck)) {
+        res.status(200).send({message: 'The user exists in our db'})
+    } else {
+        res.status(400).send({message: 'The user DNE in our db'})
+    }
 })
 
 app.get('/api/start_instalytics', (req, res) => {
     console.log('performing start_instalytics!')
-
-    fs.readdir(`./${req.query.username}/`, (err, files) => {
+    console.log(req.query.username)
+    fs.readdir(`./data/${req.query.username}/`, (err, files) => {
         // key = userName, value = average views of their posts
         let retreivedData = []
-
+        console.log(files)
         // loop through all the users that this person follows
         files.forEach(mediaMetadataJSON => {
-            let mediaMetadata = require(`./${req.query.username}/${mediaMetadataJSON}`) // parse the media metadata json file 
+            let mediaMetadata = require(`./data/${req.query.username}/${mediaMetadataJSON}`) // parse the media metadata json file 
 
             const username = mediaMetadata.GraphProfileInfo.username
+            // the dude has 0 posts
             if (mediaMetadata.GraphImages === undefined) { 
                 retreivedData.push({
                     username: username,
@@ -346,6 +259,29 @@ app.get('/api/start_instalytics', (req, res) => {
                 return 
             }
 
+
+            // TOP 5 POSTS
+            let metadataList = mediaMetadata.GraphImages
+            metadataList.sort((a,b) => (a.edge_media_preview_like.count <= b.edge_media_preview_like.count) ? 1 : -1)
+            
+            let top5Posts = []
+            for (let i = 0; i < metadataList.length; i++) {
+              if (i === 5) {
+                  break;
+              }
+
+              const currentMetadata = metadataList[i]
+              let caption = currentMetadata.edge_media_to_caption.edges[0] ? currentMetadata.edge_media_to_caption.edges[0].node.text : ''
+              top5Posts.push({
+                  images: currentMetadata.urls,
+                  likes: currentMetadata.edge_media_preview_like.count,
+                  comments: currentMetadata.edge_media_to_comment.count,
+                  caption: caption,
+                  date: currentMetadata.taken_at_timestamp,
+              })
+            }
+
+            // Rest of 6 sorting values
             const numFollowers = mediaMetadata.GraphProfileInfo.info.followers_count // number of followers
             const numMedia = mediaMetadata.GraphImages.length // number of medias retreived
             let numLikes = 0
@@ -365,12 +301,13 @@ app.get('/api/start_instalytics', (req, res) => {
 
             retreivedData.push({
                 username: username,
-                averageLikes: ((numLikes / numMedia) * 100).toFixed(2), 
-                averageComments: ((numComments / numMedia) * 100).toFixed(2), 
-                averageViews: ((numViews / numVideos) * 100).toFixed(2),
-                LFR: ((numLikes / numMedia) / numFollowers).toFixed(2),
-                LCR: ((numComments / numMedia) / numFollowers).toFixed(3),
-                LVR: ((numViews / numVideos) / numFollowers).toFixed(2)
+                averageLikes: (numLikes / numMedia).toFixed(2), 
+                averageComments: (numComments / numMedia).toFixed(2), 
+                averageViews: (numViews / numVideos).toFixed(2),
+                LFR: ((numLikes / numMedia) * 100 / numFollowers).toFixed(2),
+                LCR: ((numComments / numMedia) * 100 / numFollowers).toFixed(3),
+                LVR: ((numViews / numVideos) * 100 / numFollowers).toFixed(2),
+                top5: top5Posts
             })
         })
 
@@ -381,7 +318,7 @@ app.get('/api/start_instalytics', (req, res) => {
 app.get('/api/top_5_posts', (req, res) => {
     console.log('performing top_5_posts!')
 
-    let mediaMetadata = require(`./${req.query.logged_in_username}/${req.query.target_username}`)
+    let mediaMetadata = require(`./data/${req.query.logged_in_username}/${req.query.target_username}`)
 
     if (mediaMetadata) {
         let metadataList = mediaMetadata.GraphImages
@@ -402,6 +339,7 @@ app.get('/api/top_5_posts', (req, res) => {
                 date: currentMetadata.taken_at_timestamp,
             })
         }
+        
         res.send(dataToSend)
     }
 })

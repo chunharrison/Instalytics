@@ -10,9 +10,11 @@
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "mkdirp": "^1.0.4",
     "node-fetch": "^2.6.1",
+    "nodemailer": "^6.4.11",
     "nodemon": "^2.0.4",
     "rimraf": "^3.0.2"
   }

@@ -58,6 +58,22 @@ canvas {
     transition: height 500ms;
 }
 
+.search-page-chart-container {
+    height:calc(100% - 6em);
+    width:70%;
+    background-color:white;
+    border-radius:5px;
+    padding:1em;
+    margin:2em;
+    margin-right:1em;
+    -webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
+    -moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
+    box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
+    min-height:650px;
+    min-width:600px;
+
+}
+
 .search-page-form {
     display:flex;
     flex-direction:column;
@@ -68,7 +84,7 @@ canvas {
     width:450px;
     background-color:transparent;
     border:none;
-    border-radius: 10px;
+    border-radius: 5px;
     outline:none;
     color:white;
     border:1px solid white;
@@ -106,17 +122,166 @@ canvas {
 }
 
 .search-page-data-container {
-    height:100%;
+    height:calc(100vh - 60px);
+    width:100vw;
     background-color:rgb(250, 250, 250);
-    padding:1em;
+    display:flex;
+    overflow:auto;
 }
 
-.search-page-data {
-    background-color:white;
+.search-page-current-data {
+    width: 30%;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding-left:1em;
+    padding-right:1em;
+    min-width:350px;
+    min-height:700px;
+}
+
+.search-page-current-username {
+    width:100%;
+    height:60px;
+    border-radius: 5px;
+    color:black;
+    margin:0;
+    font-size:25px;
+    line-height:60px;
+    margin-left:0.5em;
+}
+
+.Dropdown-root {
+    margin-top:0.5em;
+    margin-bottom:0.5em;
+}
+
+.Dropdown-control {
     border-radius:10px;
-    padding:1em;
-    margin:1em;
-    -webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
-    -moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
-    box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
+    border:1px solid rgba(0, 0, 0, 0.226);
+}
+
+.search-page-averages {
+    border-radius:10px;
+    border:none;
+}
+
+.search-page-data-header {
+    margin:0;
+    font-size:25px;
+    margin-bottom:0.5em;
+    margin-left:0.5em;
+    margin-top:0.5em;
+    font-family: muli;
+}
+
+.search-page-data-averages {
+    display:flex;
+    flex-direction:column;
+    justify-content: space-between;
+    border-radius:5px;
+    padding-bottom:1em;
+    padding-top:1em;
+    margin-bottom:0.5em;
+    margin-top:0.5em;
+    background-color: white;
+    -webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.05);
+    -moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.05);
+    box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.05);
+}
+
+.search-page-data-ratios {
+    display:flex;
+    flex-direction:column;
+    justify-content: space-between;
+    background: rgb(238,174,202);
+    background: linear-gradient(135deg, rgba(238,174,202,1) 0%, rgba(255,195,182,1) 100%);
+    border-radius:5px;
+    padding-bottom:1em;
+    padding-top:1em;
+    margin-bottom:0.5em;
+    margin-top:0.5em;
+    -webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.05);
+    -moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.05);
+    box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.05);
+}
+
+.search-page-data-average {
+    width:100%;
+    height:70px;
+    display:flex;
+    align-items:center;
+    justify-content: center;
+}
+
+.search-page-data-name {
+    color:rgb(192, 192, 192);
+    margin:0.5em 0.5em 0.5em 0.2em;
+    font-size: 15px;
+    margin-right:auto;
+}
+
+.search-page-data-value {
+    color:white;
+    margin:0.5em 0 0.5em 0.5em;
+    font-size:25px;
+    margin-right:auto;
+}
+
+.search-page-data-value-average {
+    color:rgba(0, 0, 0, 0.671);
+    margin:0.5em 0 0.5em 0.5em;
+    font-size:25px;
+    margin-right:auto;
+}
+
+.search-page-data-image {
+    width:35px;
+    justify-self: flex-start;
+    margin-right:2em;
+    margin-left:auto;
+}
+
+.search-page-data-image-ratio {
+    height:35px;
+    filter: invert(100%) sepia(2%) saturate(10%) hue-rotate(17deg) brightness(104%) contrast(103%);
+}
+.search-page-ratio-container {
+    display:flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.search-page-ratio-container {
+    margin-left:7vw;
+    margin-right:2em;
+}
+
+.search-page-data-divide-ratio {
+    font-size:25px;
+    margin-left:0.5em;
+    margin-right:0.5em;
+    color:white;
+    margin-top:0.8em;
+}
+
+.divider {
+    background-color:rgba(255, 255, 255, 0.459);
+    height:1px;
+    width:25%;
+    margin-left:auto;
+    margin-right:auto;
+    margin-top:0.5em;
+    margin-bottom:0.5em;
+}
+
+.divider-average {
+    background-color:rgba(0, 0, 0, 0.459);
+    height:1px;
+    width:25%;
+    margin-left:auto;
+    margin-right:auto;
+    margin-top:0.5em;
+    margin-bottom:0.5em;
 }

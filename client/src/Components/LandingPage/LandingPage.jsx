@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react' 
-import { ResponsiveContainer, BarChart, LineChart, Line, XAxis, YAxis, Tooltip, Legend, Bar, Cell } from 'recharts';
+import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar, Cell } from 'recharts';
 import Dropdown from 'react-dropdown';
 import 'react-dropdown/style.css';
-
+import AnimatedNumber from "animated-number-react";
 import axios from 'axios'
 import validator from 'validator';
 import {isEmpty} from 'is-empty'
 import queryString from 'query-string';
 
+import viewsImg from './views.png';
+import likesImg from './likes.png';
+import commentsImg from './comments.png';
+import followersImg from './followers.png';
 import './LandingPage.css';
 
 const LandingPage = props => {
@@ -342,6 +346,10 @@ const LandingPage = props => {
         { value: 'LFR', label: 'Like to Follower Ratio' },
         { value: 'LCR', label: 'Like to Comment Ratio' },
     ]
+
+    const formatValue = value => Math.floor(value);
+    const ratioFormatValue = value => Number(value).toFixed(2);
+    
     return (
         <div className='search-page-container'>
             <div className='nav'>
@@ -392,33 +400,109 @@ const LandingPage = props => {
                 }
             </div>
             <div className='search-page-data-container' style={{display: `${searched ? '' : 'none'}`}}>
-                {data ?
-                <ResponsiveContainer className='search-page-data' width={900} height="55%">
-                    
+                <div className='search-page-chart-container'>
+                    <Dropdown options={options} onChange={(e) => handleSort(e)} value={activeValue} placeholder="Select an option" />
+                    {data.length !== 0 ?
+                    <ResponsiveContainer className='search-page-data' width='100%' height='95%'>
+                        
                         <BarChart data={data} layout='vertical' key={dataKey} margin={{ top: 10, left: 10, right: 10, bottom: 10 }} onClick={(data, index) => handleBarChartClick(data, index)}>
-                            <YAxis type='category' dataKey="username" width={150}/>
-                            <XAxis type='number' domain={[0, max]} allowDecimals={false} height={60}/>
-                            <Tooltip/>
+                            <CartesianGrid strokeDasharray="5 5" horizontal={false} />
+                            <YAxis type='category' dataKey="username" width={130}  tickLine={false}/>
+                            <XAxis type='number' domain={[0, max]} allowDecimals={false} height={30} axisLine={false} tickLine={false} interval={'preserveStart'} tickCount={6}/>
+                            <Tooltip cursor={{fill: '#f7f7f7'}}/>
                             <Bar dataKey={activeValue}>
                                 {
                                     data.map((entry, index) => (
-                                        <Cell cursor="pointer" fill={index === activeIndex ? '#82ca9d' : '#8884d8' } key={`cell-${index}`}/>
+                                        <Cell cursor="pointer" fill={index === activeIndex ? '#edbed2' : '#adb8ff' } key={`cell-${index}`}/>
                                     ))
                                 }
                             </Bar>
                         </BarChart>
-                </ResponsiveContainer>
-                : 
-                null}
-
-                <Dropdown options={options} onChange={(e) => handleSort(e)} value={activeValue} placeholder="Select an option" />
-                <div>average likes: {activeData.averageLikes}</div>
-                <div>average views: {activeData.averageViews}</div>
-                <div>average comments: {activeData.averageComments}</div>
-                <div>likes to views ratio: {activeData.LVR}</div>
-                <div>likes to follower ratio: {activeData.LFR}</div>
-                <div>likes to comments ratio: {activeData.LCR}</div>
-                <button onClick={e => testEmail(e)}>email</button>
+                    </ResponsiveContainer>
+                    : 
+                    null}
+                </div>
+                
+                <div className='search-page-current-data'>
+                    <div className='search-page-averages'>
+                        <p className='search-page-data-header'>{activeData.username}'s Averages</p>
+                        <div className='search-page-data-averages'>
+                            <div className='search-page-data-average'>
+                                <img src={viewsImg} className='search-page-data-image'/>
+                                <AnimatedNumber
+                                className='search-page-data-value-average'
+                                value={activeData.averageViews}
+                                duration={300}
+                                formatValue={formatValue}
+                                />
+                            </div>
+                            <div className='divider-average'></div>
+                            <div className='search-page-data-average'>
+                                <img src={likesImg} className='search-page-data-image'/>
+                                <AnimatedNumber
+                                className='search-page-data-value-average'
+                                value={activeData.averageLikes}
+                                duration={300}
+                                formatValue={formatValue}
+                                />
+                            </div>
+                            <div className='divider-average'></div>
+                            <div className='search-page-data-average'>
+                                <img src={commentsImg} className='search-page-data-image'/>
+                                <AnimatedNumber
+                                className='search-page-data-value-average'
+                                value={activeData.averageComments}
+                                duration={300}
+                                formatValue={formatValue}
+                                />                            
+                            </div>
+                        </div>
+                    </div>
+                    <div className='search-page-averages'>
+                        <p className='search-page-data-header'>{activeData.username}'s Ratios</p>
+                        <div className='search-page-data-ratios'>
+                            <div className='search-page-data-average'>
+                                <div className='search-page-ratio-container'>
+                                    <img src={likesImg} className='search-page-data-image-ratio'/>
+                                    <p className='search-page-data-divide-ratio'>/</p>
+                                    <img src={viewsImg} className='search-page-data-image-ratio'/>
+                                </div>
+                                <AnimatedNumber
+                                className='search-page-data-value'
+                                value={activeData.LVR}
+                                duration={300}
+                                formatValue={ratioFormatValue}
+                                />                            
+                            </div>
+                            <div className='divider'></div>
+                            <div className='search-page-data-average'>
+                                <div className='search-page-ratio-container'>
+                                    <img src={likesImg} className='search-page-data-image-ratio'/>
+                                    <p className='search-page-data-divide-ratio'>/</p>
+                                    <img src={followersImg} className='search-page-data-image-ratio'/>
+                                </div>                                <AnimatedNumber
+                                className='search-page-data-value'
+                                value={activeData.LFR}
+                                duration={300}
+                                formatValue={ratioFormatValue}
+                                />
+                            </div>
+                            <div className='divider'></div>
+                            <div className='search-page-data-average'>
+                                <div className='search-page-ratio-container'>
+                                    <img src={likesImg} className='search-page-data-image-ratio'/>
+                                    <p className='search-page-data-divide-ratio'>/</p>
+                                    <img src={commentsImg} className='search-page-data-image-ratio'/>
+                                </div>                                <AnimatedNumber
+                                className='search-page-data-value'
+                                value={activeData.LCR}
+                                duration={300}
+                                formatValue={ratioFormatValue}
+                                />                            
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     )

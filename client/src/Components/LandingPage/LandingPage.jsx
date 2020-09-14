@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react' 
+import React, { useState, useEffect, useRef } from 'react';
+import TopFive from './TopFive/TopFive';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar, Cell } from 'recharts';
 import Dropdown from 'react-dropdown';
 import 'react-dropdown/style.css';
@@ -9,6 +10,7 @@ import {isEmpty} from 'is-empty'
 import queryString from 'query-string';
 
 import viewsImg from './views.png';
+import postsImg from './posts.png';
 import likesImg from './likes.png';
 import commentsImg from './comments.png';
 import followersImg from './followers.png';
@@ -30,23 +32,23 @@ const LandingPage = props => {
     const [usernameCheckErrorMessage, setUsernameCheckErrorMessage] = useState('')
     const [usernameCheckResult, setUsernameCheckResult] = useState('')
 
-
     const [currentUser, setCurrentUser] = useState('')
     const canvasElement = useRef(null);
     const [context, setContext] = useState(null)
     const [searched, setSearched] = useState(false);
     const [data, setData] = useState([]);
-    const [activeIndex, setActiveIndex] = useState(0);
     const [activeData, setActiveData] = useState(0);
     const [activeValue, setActiveValue] = useState('averageLikes');
-    const [dataKey, setDataKey] = useState(1)
+    const [dataKey, setDataKey] = useState(1);
+    const [topFiveData, setTopFiveData] = useState(null);
+    const [topFiveModal, setTopFiveModal] = useState(false);
+    const [topFiveLoading, setTopFiveLoading] = useState(false);
     let time = 0;
 
     useEffect(() => {
         setContext(canvasElement.current.getContext('2d'));
         const users = localStorage.getItem('Instalytics_Users');
 
-        console.log(queryString.parse(window.location.search))
         let usernameQuery = '' + queryString.parse(window.location.search).username
         if (usernameQuery !== 'undefined' && usernameQuery !== undefined
          && usernameQuery !== null && usernameQuery !== '') {
@@ -116,7 +118,6 @@ const LandingPage = props => {
     }
 
     function handleEmailCheckboxChange(e) {
-        console.log(sendEmail)
         setSendEmail(!sendEmail)
     }
 
@@ -139,7 +140,6 @@ const LandingPage = props => {
         axios.get('http://localhost:5000/api/start_instalytics', getDataOptions)
             .then(res => {
                 let sortedData = res.data.sort(compare);
-                console.log(sortedData)
                 setData(sortedData);
                 setActiveData(sortedData[0]);
             })
@@ -302,13 +302,11 @@ const LandingPage = props => {
     }
 
     function handleBarChartClick(data, index) {
-        setActiveIndex(data.activeTooltipIndex);
+        if (!data) return;
         setActiveData(data.activePayload[0].payload)
-        console.log(data.activePayload[0].payload)
     }
 
     function handleSort(e) {
-        console.log(e)
         setActiveValue(e.value)
     }
 
@@ -316,6 +314,35 @@ const LandingPage = props => {
         e.preventDefault()
 
         window.location.replace(`http://localhost:3000/?username=${usernameCheck}`)
+    }
+
+    function handleTopFiveClick() {
+        setTopFiveLoading(true);
+
+        const options = {
+            params: {
+                logged_in_username: username,
+                target_username: activeData.username
+            },
+            headers: {
+                'Access-Control-Allow-Credentials': true,
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET',
+                'Access-Control-Allow-Headers': '*',
+            },
+        }
+
+        axios.get('http://localhost:5000/api/top-5-posts', options)
+        .then((response) => {
+            console.log(response.data)
+            setTopFiveData(response.data);
+            setTopFiveLoading(false)
+            setTopFiveModal(true);
+        })
+        .catch((error) => {
+            console.log(error)
+            setTopFiveLoading(false);
+        })
     }
 
     function testEmail(e) {
@@ -350,6 +377,10 @@ const LandingPage = props => {
     const formatValue = value => Math.floor(value);
     const ratioFormatValue = value => Number(value).toFixed(2);
     
+    const topFive = !topFiveData ? null : topFiveData.map(function(item, i){
+                                                return <TopFive data={item}/>
+                                            })
+
     return (
         <div className='search-page-container'>
             <div className='nav'>
@@ -413,7 +444,7 @@ const LandingPage = props => {
                             <Bar dataKey={activeValue}>
                                 {
                                     data.map((entry, index) => (
-                                        <Cell cursor="pointer" fill={index === activeIndex ? '#edbed2' : '#adb8ff' } key={`cell-${index}`}/>
+                                        <Cell cursor="pointer" fill={entry.username === activeData.username ? '#edbed2' : '#adb8ff' } key={`cell-${index}`}/>
                                     ))
                                 }
                             </Bar>
@@ -458,6 +489,9 @@ const LandingPage = props => {
                             </div>
                         </div>
                     </div>
+                    <button className='search-page-top-five-button' onClick={() => handleTopFiveClick()}>
+                        {topFiveLoading ? <div className='spinner'></div> : <img src={postsImg} className='search-page-top-five-button-image'/>}
+                    </button>
                     <div className='search-page-averages'>
                         <p className='search-page-data-header'>{activeData.username}'s Ratios</p>
                         <div className='search-page-data-ratios'>
@@ -480,7 +514,8 @@ const LandingPage = props => {
                                     <img src={likesImg} className='search-page-data-image-ratio'/>
                                     <p className='search-page-data-divide-ratio'>/</p>
                                     <img src={followersImg} className='search-page-data-image-ratio'/>
-                                </div>                                <AnimatedNumber
+                                </div>                                
+                                <AnimatedNumber
                                 className='search-page-data-value'
                                 value={activeData.LFR}
                                 duration={300}
@@ -493,7 +528,8 @@ const LandingPage = props => {
                                     <img src={likesImg} className='search-page-data-image-ratio'/>
                                     <p className='search-page-data-divide-ratio'>/</p>
                                     <img src={commentsImg} className='search-page-data-image-ratio'/>
-                                </div>                                <AnimatedNumber
+                                </div>                                
+                                <AnimatedNumber
                                 className='search-page-data-value'
                                 value={activeData.LCR}
                                 duration={300}
@@ -502,6 +538,12 @@ const LandingPage = props => {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div className='search-page-top-five-modal-background' style={{'display': `${topFiveModal ? '' : 'none'}`}} onClick={() => setTopFiveModal(false)}>
+                <div className='search-page-top-five-modal' onClick={(e) => e.stopPropagation()}>
+                    <div className='search-page-top-five-modal-header'>Top Posts</div>
+                    {topFive}
                 </div>
             </div>
         </div>

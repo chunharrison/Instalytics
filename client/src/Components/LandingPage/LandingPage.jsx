@@ -9,6 +9,7 @@ import validator from 'validator';
 import {isEmpty} from 'is-empty'
 import queryString from 'query-string';
 
+import infoImg from './info.png';
 import viewsImg from './views.png';
 import postsImg from './posts.png';
 import likesImg from './likes.png';
@@ -19,6 +20,8 @@ import './LandingPage.css';
 const LandingPage = props => {
     const [loggedIn, setLoggedIn] = useState(false)
 
+    //login select
+    const [userType, setUserType] = useState('new');
     // login input 1
     const [username, setUsername] = useState('')
     const [usernameErrorMessage, setUsernameErrorMessage] = useState('')
@@ -391,31 +394,40 @@ const LandingPage = props => {
                 {searched ? 
                 <label className='search-page-username-label'>{username}</label>
                 : 
-                <div>
-
+                <div className='search-page-transition'>
+                    <div className='search-page-user-selection'>
+                        <p className='search-page-user-new' onClick={() => setUserType('new')} style={{color: `${userType === 'new' ? 'white' : 'rgba(255, 255, 255, 0.47)'}`}}>New User</p>
+                        <p className='search-page-user-returning' onClick={() => setUserType('returning')} style={{color: `${userType === 'returning' ? 'white' : 'rgba(255, 255, 255, 0.47)'}`}}>Returning User</p>
+                    </div>
+                    {userType === 'new' ? 
                     <form onSubmit={e => handleSubmit(e)} className='search-page-form'>
                         <input className='search-page-input' type="text" value={username} placeholder='Username' onChange={e => handleAccountChange(e)}/>
-                        <span>{usernameErrorMessage}</span>
+                        <span className='search-page-error'>{usernameErrorMessage}</span>
                         <input className='search-page-input' type="password" value={password} placeholder='Password' onChange={e => handlePasswordChange(e)}/>
-                        <span>{passwordErrorMessage}</span>
-                        <div>
-                            <br/>
-                            <p>If you choose to fetch a lot of posts, it will take a while</p>
-                            <p>You can opt to get off the website and have us email you when the data is ready</p>
+                        <span className='search-page-error'>{passwordErrorMessage}</span>
+                        <div className='search-page-email-information'>
+                            <img className='search-page-email-information-image' src={infoImg} alt=""/>
+                            <div>
+                                <p>If you choose to fetch a lot of posts, it will take a while.</p>
+                                <p>You can opt to get off the website and have us email you when the data is ready.</p>
+                            </div>
                         </div>
-                        <input className='search-page-input' type="checkbox" checked={sendEmail} onChange={e => handleEmailCheckboxChange(e)}/>
-                        <span>Yes, send me an email notification when its done</span> 
-                        <input className='search-page-input' type="email" value={email} placeholder='Email' onChange={e => handleEmailChange(e)} disabled={sendEmail ? "" : "disabled"}/>
-                        <span>{emailErrorMessage}</span>
+                        <div className="cboxB">
+                            <input type="checkbox" id="boxB" checked={sendEmail} onChange={e => handleEmailCheckboxChange(e)}/>
+                            <label for="boxB">Opt In</label>
+                        </div>
+                        <input className='search-page-input' type="email" value={email} placeholder='Email' onChange={e => handleEmailChange(e)} disabled={sendEmail ? "" : "disabled"} style={{opacity: `${sendEmail ? '': '0.3'}`}}/>
+                        <span className='search-page-error'>{emailErrorMessage}</span>
                         <button className='search-page-submit' type="submit">Analyze</button>
                     </form>
-
+                    :
                     <form onSubmit={e => handleSubmit2(e)} className='search-page-form'>
-                        <p>If you have used our service before, then start straight away</p>
                         <input className='search-page-input' type="text" value={usernameCheck} placeholder='Username' onChange={e => handleAccountCheckChange(e)}/>
-                        <span>{usernameCheckErrorMessage}</span>
+                        <span className='search-page-error'>{usernameCheckErrorMessage}</span>
                         <button className='search-page-submit' type="submit">Find</button>
                     </form>
+                    }
+                    
                     {
                         usernameCheckResult === 'good'
                         ?

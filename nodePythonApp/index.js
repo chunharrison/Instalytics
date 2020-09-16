@@ -1,6 +1,6 @@
 require('dotenv').config()
 const express = require('express')
-const {spawn} = require('child_process');
+const {exec, spawn} = require('child_process');
 const app = express()
 const cors = require('cors')
 const fs = require('fs');
@@ -10,6 +10,187 @@ const nodemailer = require('nodemailer');
 const port = 5000
 
 app.use(cors())
+
+app.get('/api/test-email', (req, res) => {
+  sendEmail(req.query.email, req.query.uname)
+})
+
+app.get('/api/store-metadata', (req, res) => {
+    var dataToSend;
+
+    if (req.query.login_user === '') {
+        return res.status(400).send({message: 'Incorrect password or usernames'});
+    }
+
+    console.log(req.query.login_user, req.query.login_pass)
+
+    mkdirp(`./data/${req.query.login_user}`)
+
+    // spawn new child process to call the python script
+    const python = spawn('python', ['getData.py', req.query.login_user, req.query.login_pass]);
+
+    // in close event we are sure that stream from child process is closed
+    python.on('close', (code) => {
+        console.log(`child process close all stdio with code ${code}`);
+
+        const files = fs.readdirSync(`./data/${req.query.login_user}/`)
+        console.log(files)
+        if (files.length === 0) {
+            rimraf.sync(`./data/${req.query.login_user}`)
+
+            res.status(400).send({message: 'Incorrect password or username'})
+        }
+        else {
+            res.status(200).send()
+            console.log(req.query.sendEmail)
+            if (req.query.sendEmail) {
+              console.log('sending email...')
+              // sendEmail(req.query.login_user, req.query.email)
+            }
+        }
+    });
+    
+})
+
+app.get('/api/update-metadata', (req,res) => {
+  console.log('performing update-metadata!')
+  console.log(req.query.username, req.query.refreshPassword)
+
+  // spawn new child process to call the python script
+  exec(`instagram-scraper --followings-input --login-user ${req.query.username} --login-pass ${req.query.refreshPassword} --destination ./data/${req.query.username}/ --media-types none --media-metadata --maximum 20 --profile-metadata --latest`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`exec error: ${error}`);
+      return;
+    }
+    console.log(`stdout: ${stdout}`);
+    console.error(`stderr: ${stderr}`);
+  })
+
+  // # '--followings-output', 'followings.txt',
+  // # '--latest-stamps',
+})
+
+app.get('/api/check-username', (req, res) => {
+    console.log('performing check-username')
+
+    const dirCheck = './data/' + req.query.username
+
+    if (fs.existsSync(dirCheck)) {
+        res.status(200).send({message: 'The user exists in our db'})
+    } else {
+        res.status(400).send({message: 'The user DNE in our db'})
+    }
+})
+
+app.get('/api/start_instalytics', (req, res) => {
+    console.log('performing start_instalytics!')
+    console.log(req.query.username)
+    fs.readdir(`./data/${req.query.username}/`, (err, files) => {
+        // key = userName, value = average views of their posts
+        let retreivedData = []
+        console.log(files)
+        // loop through all the users that this person follows
+        files.forEach(mediaMetadataJSON => {
+            let mediaMetadata = require(`./data/${req.query.username}/${mediaMetadataJSON}`) // parse the media metadata json file 
+
+            const username = mediaMetadata.GraphProfileInfo.username
+            // the dude has 0 posts
+            if (mediaMetadata.GraphImages === undefined) { 
+                retreivedData.push({
+                    username: username,
+                    averageLikes: 'NaN', 
+                    averageComments: 'NaN', 
+                    averageViews: 'NaN',
+                    LFR: 'NaN',
+                    CFR: 'NaN',
+                    VFR: 'NaN',
+                    top5: 'NaN'
+                })
+                return 
+            }
+
+
+            // TOP 5 POSTS
+            let metadataList = mediaMetadata.GraphImages
+            metadataList.sort((a,b) => (a.edge_media_preview_like.count <= b.edge_media_preview_like.count) ? 1 : -1)
+            
+            let top5Posts = []
+            for (let i = 0; i < metadataList.length; i++) {
+              if (i === 5) {
+                  break;
+              }
+
+              const currentMetadata = metadataList[i]
+              let caption = currentMetadata.edge_media_to_caption.edges[0] ? currentMetadata.edge_media_to_caption.edges[0].node.text : ''
+              top5Posts.push({
+                  images: currentMetadata.urls,
+                  likes: currentMetadata.edge_media_preview_like.count,
+                  comments: currentMetadata.edge_media_to_comment.count,
+                  caption: caption,
+                  date: currentMetadata.taken_at_timestamp,
+              })
+            }
+
+            // Rest of 6 sorting values
+            const numFollowers = mediaMetadata.GraphProfileInfo.info.followers_count // number of followers
+            const numMedia = mediaMetadata.GraphImages.length // number of medias retreived
+            let numLikes = 0
+            let numComments = 0
+            let numViews = 0 // total number of views for this specific user
+            let numVideos = 0 // total number of posts that are videos
+            // loop through the retrieved metadata of medias
+            mediaMetadata.GraphImages.forEach(media => {
+                numLikes += media.edge_media_preview_like.count
+                numComments += media.edge_media_to_comment.count
+                if (media.is_video) {
+                    numViews += media.video_view_count
+                    numVideos++
+                }
+            })
+
+
+            retreivedData.push({
+                username: username,
+                averageLikes: (numLikes / numMedia).toFixed(2), 
+                averageComments: (numComments / numMedia).toFixed(2), 
+                averageViews: (numViews / numVideos).toFixed(2),
+                LFR: ((numLikes / numMedia) * 100 / numFollowers).toFixed(2),
+                CFR: ((numComments / numMedia) * 100 / numFollowers).toFixed(3),
+                VFR: ((numViews / numVideos) * 100 / numFollowers).toFixed(2),
+                top5: top5Posts
+            })
+        })
+
+        res.send(retreivedData) 
+    });
+})
+
+app.get('/api/top-5-posts', (req, res) => {
+  console.log('performing top_5_posts!')
+  let mediaMetadata = require(`./data/${req.query.logged_in_username}/${req.query.target_username}`)
+
+  if (mediaMetadata) {
+      let metadataList = mediaMetadata.GraphImages
+      metadataList.sort((a,b) => (a.edge_media_preview_like.count <= b.edge_media_preview_like.count) ? 1 : -1)
+      
+      let dataToSend = []
+      for (let i = 0; i < metadataList.length; i++) {
+          if (i === 4) {
+              return res.send(dataToSend)
+          }
+          const currentMetadata = metadataList[i]
+          dataToSend.push({
+              images: currentMetadata.urls,
+              likes: currentMetadata.edge_media_preview_like.count,
+              comments: currentMetadata.edge_media_to_comment.count,
+              caption: currentMetadata.edge_media_to_caption.edges[0].node.text,
+              date: currentMetadata.taken_at_timestamp,
+          })
+      }
+      
+      return res.send(dataToSend)
+  }
+})
 
 function sendEmail(respondentEmail, respondentUsername) {
   console.log('sendEmail', respondentEmail, respondentUsername)
@@ -179,167 +360,5 @@ function sendEmail(respondentEmail, respondentUsername) {
       else console.log(response)
     })
 }
-
-app.get('/api/test-email', (req, res) => {
-  sendEmail(req.query.email, req.query.uname)
-})
-
-app.get('/api/store-metadata', (req, res) => {
-    var dataToSend;
-
-    if (req.query.login_user === '') {
-        return res.status(400).send({message: 'Incorrect password or usernames'});
-    }
-
-    console.log(req.query.login_user, req.query.login_pass)
-
-    mkdirp(`./data/${req.query.login_user}`)
-
-    // spawn new child process to call the python script
-    const python = spawn('python', ['getData.py', req.query.login_user, req.query.login_pass]);
-
-    // in close event we are sure that stream from child process is closed
-    python.on('close', (code) => {
-        console.log(`child process close all stdio with code ${code}`);
-
-        const files = fs.readdirSync(`./data/${req.query.login_user}/`)
-        console.log(files)
-        if (files.length === 0) {
-            rimraf.sync(`./data/${req.query.login_user}`)
-
-            res.status(400).send({message: 'Incorrect password or username'})
-        }
-        else {
-            res.status(200).send()
-            console.log(req.query.sendEmail)
-            if (req.query.sendEmail) {
-              console.log('sending email...')
-              // sendEmail(req.query.login_user, req.query.email)
-            }
-        }
-    });
-    
-})
-
-app.get('/api/check-username', (req, res) => {
-    console.log('performing check-username')
-
-    const dirCheck = './data/' + req.query.username
-
-    if (fs.existsSync(dirCheck)) {
-        res.status(200).send({message: 'The user exists in our db'})
-    } else {
-        res.status(400).send({message: 'The user DNE in our db'})
-    }
-})
-
-app.get('/api/start_instalytics', (req, res) => {
-    console.log('performing start_instalytics!')
-    console.log(req.query.username)
-    fs.readdir(`./data/${req.query.username}/`, (err, files) => {
-        // key = userName, value = average views of their posts
-        let retreivedData = []
-        console.log(files)
-        // loop through all the users that this person follows
-        files.forEach(mediaMetadataJSON => {
-            let mediaMetadata = require(`./data/${req.query.username}/${mediaMetadataJSON}`) // parse the media metadata json file 
-
-            const username = mediaMetadata.GraphProfileInfo.username
-            // the dude has 0 posts
-            if (mediaMetadata.GraphImages === undefined) { 
-                retreivedData.push({
-                    username: username,
-                    averageLikes: 'NaN', 
-                    averageComments: 'NaN', 
-                    averageViews: 'NaN',
-                    LFR: 'NaN',
-                    LCR: 'NaN',
-                    LVR: 'NaN'
-                })
-                return 
-            }
-
-
-            // TOP 5 POSTS
-            let metadataList = mediaMetadata.GraphImages
-            metadataList.sort((a,b) => (a.edge_media_preview_like.count <= b.edge_media_preview_like.count) ? 1 : -1)
-            
-            let top5Posts = []
-            for (let i = 0; i < metadataList.length; i++) {
-              if (i === 5) {
-                  break;
-              }
-
-              const currentMetadata = metadataList[i]
-              let caption = currentMetadata.edge_media_to_caption.edges[0] ? currentMetadata.edge_media_to_caption.edges[0].node.text : ''
-              top5Posts.push({
-                  images: currentMetadata.urls,
-                  likes: currentMetadata.edge_media_preview_like.count,
-                  comments: currentMetadata.edge_media_to_comment.count,
-                  caption: caption,
-                  date: currentMetadata.taken_at_timestamp,
-              })
-            }
-
-            // Rest of 6 sorting values
-            const numFollowers = mediaMetadata.GraphProfileInfo.info.followers_count // number of followers
-            const numMedia = mediaMetadata.GraphImages.length // number of medias retreived
-            let numLikes = 0
-            let numComments = 0
-            let numViews = 0 // total number of views for this specific user
-            let numVideos = 0 // total number of posts that are videos
-            // loop through the retrieved metadata of medias
-            mediaMetadata.GraphImages.forEach(media => {
-                numLikes += media.edge_media_preview_like.count
-                numComments += media.edge_media_to_comment.count
-                if (media.is_video) {
-                    numViews += media.video_view_count
-                    numVideos++
-                }
-            })
-
-
-            retreivedData.push({
-                username: username,
-                averageLikes: (numLikes / numMedia).toFixed(2), 
-                averageComments: (numComments / numMedia).toFixed(2), 
-                averageViews: (numViews / numVideos).toFixed(2),
-                LFR: ((numLikes / numMedia) * 100 / numFollowers).toFixed(2),
-                LCR: ((numComments / numMedia) * 100 / numFollowers).toFixed(3),
-                LVR: ((numViews / numVideos) * 100 / numFollowers).toFixed(2),
-                top5: top5Posts
-            })
-        })
-
-        res.send(retreivedData) 
-    });
-})
-
-app.get('/api/top-5-posts', (req, res) => {
-  console.log('performing top_5_posts!')
-  let mediaMetadata = require(`./data/${req.query.logged_in_username}/${req.query.target_username}`)
-
-  if (mediaMetadata) {
-      let metadataList = mediaMetadata.GraphImages
-      metadataList.sort((a,b) => (a.edge_media_preview_like.count <= b.edge_media_preview_like.count) ? 1 : -1)
-      
-      let dataToSend = []
-      for (let i = 0; i < metadataList.length; i++) {
-          if (i === 4) {
-              return res.send(dataToSend)
-          }
-          const currentMetadata = metadataList[i]
-          dataToSend.push({
-              images: currentMetadata.urls,
-              likes: currentMetadata.edge_media_preview_like.count,
-              comments: currentMetadata.edge_media_to_comment.count,
-              caption: currentMetadata.edge_media_to_caption.edges[0].node.text,
-              date: currentMetadata.taken_at_timestamp,
-          })
-      }
-      
-      return res.send(dataToSend)
-  }
-})
 
 app.listen(port, () => console.log(`Listening on port ${port}!`))

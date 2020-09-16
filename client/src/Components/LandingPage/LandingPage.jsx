@@ -17,9 +17,12 @@ import commentsImg from './comments.png';
 import followersImg from './followers.png';
 import './LandingPage.css';
 
-const LandingPage = props => {
-    const [loggedIn, setLoggedIn] = useState(false)
+// for harrison, mario can delete
+import Button from 'react-bootstrap/Button'
+import Modal from 'react-bootstrap/Modal'
+import Form from 'react-bootstrap/Form'
 
+const LandingPage = props => {
     //login select
     const [userType, setUserType] = useState('new');
     // login input 1
@@ -35,7 +38,10 @@ const LandingPage = props => {
     const [usernameCheckErrorMessage, setUsernameCheckErrorMessage] = useState('')
     const [usernameCheckResult, setUsernameCheckResult] = useState('')
 
-    const [currentUser, setCurrentUser] = useState('')
+    // refresh
+    const [refreshPopupShow, setRefreshPopupShow] = useState(false)
+    const [refreshPassword, setRefreshPassword] = useState('')
+
     const canvasElement = useRef(null);
     const [context, setContext] = useState(null)
     const [searched, setSearched] = useState(false);
@@ -284,9 +290,30 @@ const LandingPage = props => {
     function refresh(e) {
         e.preventDefault()
 
-        const getDataOptions = {
+        setRefreshPopupShow(true)
+    }
+
+    function handleRefreshPasswordChange(e) {
+        setRefreshPassword(e.target.value)
+    }
+
+    // when they close the popup window 
+    // reset the password to an empty string
+    // then close the window
+    function handleRefreshPopupHide(e) {
+        e.preventDefault()
+
+        setRefreshPassword('')
+        setRefreshPopupShow(false)
+    }
+
+    function handleInitiateRefresh(e) {
+        e.preventDefault()
+        console.log(username, refreshPassword)
+        const options = {
             params: {
-                username: username
+                username: username,
+                refreshPassword: refreshPassword
             },
             headers: {
                 'Access-Control-Allow-Credentials': true,
@@ -295,15 +322,20 @@ const LandingPage = props => {
                 'Access-Control-Allow-Headers': '*',
             },
         }
+
+        setRefreshPassword('')
+        setRefreshPopupShow(false)
+
+        axios.get('http://localhost:5000/api/update-metadata', options)
+            .then(res => {
+                console.log(res)
+                getData(username)
+            })
+            .catch(err => {
+                console.log(err)
+            })
     }
     
-    function getLocalStorage(e) {
-        e.preventDefault()
-
-        const users = localStorage.getItem('Instalytics_Users')
-        console.log(users)
-    }
-
     function handleBarChartClick(data, index) {
         if (!data) return;
         setActiveData(data.activePayload[0].payload)
@@ -388,6 +420,13 @@ const LandingPage = props => {
         <div className='search-page-container'>
             <div className='nav'>
                 <p className='nav-logo'>instalytics</p>
+                {
+                    searched
+                    ?
+                    <button onClick={e => refresh(e)}>Update</button>
+                    : 
+                    null
+                }
             </div>
             <div className='search-page-search-container' style={{height: `${searched ? '60px' : ''}`}}>
                 <canvas ref={canvasElement} id="canvas" width='32px' height={`${searched ? '5px' : '32px'}`} style={{height: `${searched ? '60px' : ''}`, opacity: `${searched ? '0.7' : ''}`}}/>
@@ -556,6 +595,18 @@ const LandingPage = props => {
                 <div className='search-page-top-five-modal' onClick={(e) => e.stopPropagation()}>
                     <div className='search-page-top-five-modal-header'>Top Posts</div>
                     {topFive}
+                </div>
+            </div>
+            <div className='search-page-top-five-modal-background' style={{'display': `${refreshPopupShow ? '' : 'none'}`}} onClick={(e) => handleRefreshPopupHide(e)}>
+                <div className='search-page-top-five-modal' onClick={(e) => e.stopPropagation()}>
+                    <div className='search-page-top-five-modal-header'>Update Data</div>
+                    
+                    <form onSubmit={e => handleInitiateRefresh(e)} className='search-page-form'>
+                        <input className='search-page-input refresh-password' type="password" value={refreshPassword} placeholder='Password' onChange={e => handleRefreshPasswordChange(e)}/>
+                        {/* <span className='search-page-error'>{passwordErrorMessage}</span> */}
+
+                        <button className='search-page-submit' type="submit">Update</button>
+                    </form>
                 </div>
             </div>
         </div>

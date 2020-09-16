@@ -287,6 +287,8 @@ const LandingPage = props => {
             })
     }
 
+
+    // REFRESH
     function refresh(e) {
         e.preventDefault()
 
@@ -335,6 +337,16 @@ const LandingPage = props => {
                 console.log(err)
             })
     }
+
+    // LOGOUT
+    function logout(e) {
+        e.preventDefault()
+
+        window.location.replace('http://localhost:3000/')
+    }
+
+
+
     
     function handleBarChartClick(data, index) {
         if (!data) return;
@@ -423,7 +435,10 @@ const LandingPage = props => {
                 {
                     searched
                     ?
-                    <button onClick={e => refresh(e)}>Update</button>
+                    <div>
+                        <button onClick={e => refresh(e)}>Update</button>
+                        <button onClick={e => logout(e)}>Logout</button>
+                    </div>
                     : 
                     null
                 }

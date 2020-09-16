@@ -42,6 +42,9 @@ const LandingPage = props => {
     const [refreshPopupShow, setRefreshPopupShow] = useState(false)
     const [refreshPassword, setRefreshPassword] = useState('')
 
+    // data
+    const [fetchedDate, setFetchedDate] = useState('')
+
     const canvasElement = useRef(null);
     const [context, setContext] = useState(null)
     const [searched, setSearched] = useState(false);
@@ -152,7 +155,18 @@ const LandingPage = props => {
                 setData(sortedData);
                 setActiveData(sortedData[0]);
             })
+
+        axios.get('http://localhost:5000/api/data-date', getDataOptions)
+            .then(res => {
+                console.log(fetchedDate)
+                setFetchedDate(res.data.date)
+            })
+            .catch(err => {
+                console.log(err)
+            })
     }
+
+
  
     function handleSubmit(e) {
         e.preventDefault()
@@ -425,13 +439,14 @@ const LandingPage = props => {
     const ratioFormatValue = value => Number(value).toFixed(2);
     
     const topFive = !topFiveData ? null : topFiveData.map(function(item, i){
-                                                return <TopFive data={item}/>
-                                            })
-
+        return <TopFive data={item}/>
+    })
+                                            
     return (
         <div className='search-page-container'>
             <div className='nav'>
                 <p className='nav-logo'>instalytics</p>
+                <p>{fetchedDate}</p>
                 {
                     searched
                     ?

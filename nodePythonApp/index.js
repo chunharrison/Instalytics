@@ -25,6 +25,10 @@ app.get('/api/store-metadata', (req, res) => {
     console.log(req.query.login_user, req.query.login_pass)
 
     mkdirp(`./data/${req.query.login_user}`)
+    let fetchedDate = new Date();
+    fs.appendFile(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
+      if (err) console.log('writeFile error', err)
+    });
 
     // spawn new child process to call the python script
     const python = spawn('python', ['getData.py', req.query.login_user, req.query.login_pass]);
@@ -55,6 +59,12 @@ app.get('/api/store-metadata', (req, res) => {
 app.get('/api/update-metadata', (req,res) => {
   console.log('performing update-metadata!')
   console.log(req.query.username, req.query.refreshPassword)
+
+  let fetchedDate = new Date();
+  fs.writeFile(`./data/${req.query.username}/date.txt`, fetchedDate.toString(), (err) => {
+    if (err) res.status(400).send({err: err});
+    console.log('The file has been saved!');
+  });
 
   // spawn new child process to call the python script
   exec(`instagram-scraper --followings-input --login-user ${req.query.username} --login-pass ${req.query.refreshPassword} --destination ./data/${req.query.username}/ --media-types none --media-metadata --maximum 20 --profile-metadata --latest`, (error, stdout, stderr) => {
@@ -91,6 +101,8 @@ app.get('/api/start_instalytics', (req, res) => {
         console.log(files)
         // loop through all the users that this person follows
         files.forEach(mediaMetadataJSON => {
+          if (mediaMetadataJSON === 'date.txt') return 
+
             let mediaMetadata = require(`./data/${req.query.username}/${mediaMetadataJSON}`) // parse the media metadata json file 
 
             const username = mediaMetadata.GraphProfileInfo.username
@@ -190,6 +202,22 @@ app.get('/api/top-5-posts', (req, res) => {
       
       return res.send(dataToSend)
   }
+})
+
+app.get('/api/data-date', (req, res) => {
+  console.log('performing data-date')
+
+  fs.readFile(`./data/${req.query.username}/date.txt`, 'utf8', function(err, data) {
+    if (err) {
+      // throw err;
+      res.status(400).send({err: err});
+    }
+
+    else {
+      console.log(data);
+      res.status(200).send({date: data});
+    }
+  });
 })
 
 function sendEmail(respondentEmail, respondentUsername) {

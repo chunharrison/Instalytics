@@ -26,7 +26,7 @@ app.get('/api/store-metadata', (req, res) => {
 
     mkdirp(`./data/${req.query.login_user}`)
     let fetchedDate = new Date();
-    fs.appendFile(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
+    fs.writeFile(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
       if (err) console.log('writeFile error', err)
     });
 

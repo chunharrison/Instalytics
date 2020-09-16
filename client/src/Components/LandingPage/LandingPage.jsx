@@ -17,6 +17,11 @@ import commentsImg from './comments.png';
 import followersImg from './followers.png';
 import './LandingPage.css';
 
+import Excel from 'exceljs'
+import xl from 'excel4node'
+import * as FileSaver from 'file-saver';
+import * as XLSX from 'xlsx';
+
 // for harrison, mario can delete
 import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
@@ -359,7 +364,20 @@ const LandingPage = props => {
         window.location.replace('http://localhost:3000/')
     }
 
+    // SAVE TO EXCEL
+    function saveDataToExcel(e) {
+        e.preventDefault()
 
+        const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+        const fileExtension = '.xlsx';
+        
+        console.log(data)
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = { Sheets: { 'data': ws }, SheetNames: ['data'] };
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const excelData = new Blob([excelBuffer], {type: fileType});
+        FileSaver.saveAs(excelData, `instalytics_data_${username}.xlsx` + fileExtension);
+    }
 
     
     function handleBarChartClick(data, index) {
@@ -453,6 +471,7 @@ const LandingPage = props => {
                     <div>
                         <button onClick={e => refresh(e)}>Update</button>
                         <button onClick={e => logout(e)}>Logout</button>
+                        <button onClick={e => saveDataToExcel(e)}>Save to Excel</button>
                     </div>
                     : 
                     null

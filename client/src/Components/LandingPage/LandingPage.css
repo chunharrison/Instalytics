@@ -76,6 +76,67 @@ canvas {
     margin-block-start:0.3em;
 }
 
+.nav-right {
+    position:absolute;
+    right:0;
+    height:60px;
+    display:flex;
+}
+
+.nav-right-button-container {
+    display:flex;
+    justify-content: center;
+    align-items:center;
+    margin-right:1em;
+}
+
+.search-page-date-button {
+    border:none;
+    background-color: transparent;
+    outline:none;
+    cursor:pointer;
+}
+
+.search-page-logout-button {
+    border:none;
+    background-color: transparent;
+    outline:none;
+    cursor:pointer;
+}
+
+.search-page-logout-button img {
+    height:20px;
+    margin-left:0.5em;
+    margin-right:0.5em;
+    display:flex;
+    filter: invert(100%) sepia(0%) saturate(7500%) hue-rotate(110deg) brightness(98%) contrast(108%);
+}
+
+.search-page-date-button-container {
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:30px;
+    width:80px;
+    border-radius:20px;
+    border:1px solid white;
+    margin-left:0.5em;
+    margin-right:0.5em;
+}
+
+.search-page-date-button-container p {
+    margin:0;
+    padding:0.5em;
+    color:white;
+}
+
+.search-page-date-button img {
+    height:15px;
+    padding-top:0.2em;
+    display:flex;
+    filter: invert(100%) sepia(0%) saturate(7500%) hue-rotate(110deg) brightness(98%) contrast(108%);
+}
+
 .search-page-container {
     position:relative;
     height:100%;
@@ -96,7 +157,9 @@ canvas {
 
 .search-page-user-new, .search-page-user-returning {
     color:white;
-    margin:2em;
+    margin-right:2em;
+    margin-bottom:1em;
+    margin-left:2em;
     font-size: 18px;
     cursor:pointer;
     font-family:muli;

@@ -15,6 +15,9 @@ import postsImg from './posts.png';
 import likesImg from './likes.png';
 import commentsImg from './comments.png';
 import followersImg from './followers.png';
+import refreshImg from './refresh.png';
+import logoutImg from './logout.png';
+import downloadImg from './download.png';
 import './LandingPage.css';
 
 import Excel from 'exceljs'
@@ -165,8 +168,9 @@ const LandingPage = props => {
 
         axios.get('http://localhost:5000/api/data-date', getDataOptions)
             .then(res => {
-                console.log(fetchedDate)
-                setFetchedDate(res.data.date)
+                let month = new Date(Date.parse(res.data.date)).getUTCMonth() + 1;
+                let day = new Date(Date.parse(res.data.date)).getUTCDate();
+                setFetchedDate(`${day}/${month}`)
             })
             .catch(err => {
                 console.log(err)
@@ -273,8 +277,7 @@ const LandingPage = props => {
             axios.get('http://localhost:5000/api/check-username', options)
                 .then(res => {
                     console.log('handleSubmit2 GOOD')
-                    setUsernameCheckResult('good')
-                })
+                    handleWelcomeBackClick(e);                })
                 .catch(res => {
                     console.log('no valid username in param')
                     setUsernameCheckResult('bad')
@@ -467,18 +470,22 @@ const LandingPage = props => {
         <div className='search-page-container'>
             <div className='nav'>
                 <p className='nav-logo'>instalytics</p>
-                <p>{fetchedDate}</p>
-                {
-                    searched
-                    ?
-                    <div>
-                        <button onClick={e => refresh(e)}>Update</button>
-                        <button onClick={e => logout(e)}>Logout</button>
-                        <button onClick={e => saveDataToExcel(e)}>Save to Excel</button>
-                    </div>
-                    : 
-                    null
-                }
+                <div className='nav-right'>
+                    {
+                        searched
+                        ?
+                        <div className='nav-right-button-container'>
+                            <div className='search-page-date-button-container'>
+                                <p>{fetchedDate}</p>
+                                <button className='search-page-date-button' onClick={e => refresh(e)}><img src={refreshImg}></img></button>
+                            </div>
+                            <button className='search-page-logout-button' onClick={e => saveDataToExcel(e)}><img src={downloadImg}></img></button>
+                            <button className='search-page-logout-button' onClick={e => logout(e)}><img src={logoutImg}></img></button>
+                        </div>
+                        : 
+                        null
+                    }
+                </div>
             </div>
             <div className='search-page-search-container' style={{height: `${searched ? '60px' : ''}`}}>
                 <canvas ref={canvasElement} id="canvas" width='32px' height={`${searched ? '5px' : '32px'}`} style={{height: `${searched ? '60px' : ''}`, opacity: `${searched ? '0.7' : ''}`}}/>
@@ -519,18 +526,6 @@ const LandingPage = props => {
                         <button className='search-page-submit' type="submit">Find</button>
                     </form>
                     }
-                    
-                    {
-                        usernameCheckResult === 'good'
-                        ?
-                        <div>
-                            <p>Welcome Back {usernameCheck}</p>
-                            <button onClick={e => handleWelcomeBackClick(e)}>Go see data</button>
-                        </div>
-                        :
-                        null
-                    }
-
                 </div>
                 }
             </div>

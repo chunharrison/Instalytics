@@ -35,6 +35,7 @@ const LandingPage = props => {
     const [usernameErrorMessage, setUsernameErrorMessage] = useState('')
     const [password, setPassword] = useState('')
     const [passwordErrorMessage, setPasswordErrorMessage] = useState('')
+    const [loginErrorMessage, setLoginErrorMessage] = useState('')
     const [email, setEmail] = useState('')
     const [sendEmail, setSendEmail] = useState(false)
     const [emailErrorMessage, setEmailErrorMessage] = useState('')
@@ -136,6 +137,7 @@ const LandingPage = props => {
 
     function handleEmailCheckboxChange(e) {
         setSendEmail(!sendEmail)
+        setEmail('')
     }
 
     function handleAccountCheckChange(e) {
@@ -232,11 +234,12 @@ const LandingPage = props => {
                     // setSearched(true);
                     // getData(username);
                     window.location.replace(`http://localhost:3000/?username=${username}`)
-                    
+                    setLoginErrorMessage('')
                     
             }).catch(res => {
                 if (res.response) {
                     console.log(res.response.data.message)
+                    setLoginErrorMessage(res.response.data.message)
                 } else {
                     console.log(res)
                 }
@@ -493,6 +496,7 @@ const LandingPage = props => {
                         <span className='search-page-error'>{usernameErrorMessage}</span>
                         <input className='search-page-input' type="password" value={password} placeholder='Password' onChange={e => handlePasswordChange(e)}/>
                         <span className='search-page-error'>{passwordErrorMessage}</span>
+                        <span className='search-page-error login-error'>{loginErrorMessage}</span>
                         <div className='search-page-email-information'>
                             <img className='search-page-email-information-image' src={infoImg} alt=""/>
                             <div>

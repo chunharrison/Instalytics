@@ -140,6 +140,12 @@ canvas {
     font-family:opensans-regular;
 }
 
+.search-page-error.login-error {
+    color: red !important;
+    font-family:opensans-regular;
+    font-size: 1.5rem;
+}
+
 .search-page-email-information {
     width: 425px;
     background-color:rgba(0, 0, 0, 0.151);

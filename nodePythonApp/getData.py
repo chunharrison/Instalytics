@@ -8,7 +8,7 @@ subprocess.check_output(['instagram-scraper',
                             '--destination', './data/' + sys.argv[1] + '/',
                             '--media-types', 'none',
                             '--media-metadata',
-                            '--maximum', '20',
+                            '--maximum', sys.argv[3],
                             '--profile-metadata',
                             # '--latest-stamps',
                             '--latest'])

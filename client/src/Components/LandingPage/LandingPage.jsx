@@ -39,6 +39,7 @@ const LandingPage = props => {
     const [password, setPassword] = useState('')
     const [passwordErrorMessage, setPasswordErrorMessage] = useState('')
     const [loginErrorMessage, setLoginErrorMessage] = useState('')
+    const [numPosts, setNumPosts] = useState(25)
     const [email, setEmail] = useState('')
     const [sendEmail, setSendEmail] = useState(false)
     const [emailErrorMessage, setEmailErrorMessage] = useState('')
@@ -126,6 +127,7 @@ const LandingPage = props => {
         window.requestAnimationFrame(startAnimation);
     }
 
+    // FORM
     function handleAccountChange(e) {
         setUsername(e.target.value)
     }
@@ -136,6 +138,10 @@ const LandingPage = props => {
 
     function handleEmailChange(e) {
         setEmail(e.target.value)
+    }
+
+    function handleNumPostsChange(e) {
+        setNumPosts(e.target.value)
     }
 
     function handleEmailCheckboxChange(e) {
@@ -221,6 +227,7 @@ const LandingPage = props => {
                 params: {
                     login_user: username,
                     login_pass: password,
+                    numPosts: numPosts,
                     sendEmail: sendEmail,
                     email: email
                 },
@@ -504,6 +511,20 @@ const LandingPage = props => {
                         <input className='search-page-input' type="password" value={password} placeholder='Password' onChange={e => handlePasswordChange(e)}/>
                         <span className='search-page-error'>{passwordErrorMessage}</span>
                         <span className='search-page-error login-error'>{loginErrorMessage}</span>
+                        <label for="numPosts">Number of Posts:</label>
+                        <select name="numPosts" id="numPosts" onChange={e => handleNumPostsChange(e)}>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option selected value="25">25</option>
+                            <option value="30">30</option>
+                            <option value="35">35</option>
+                            <option value="40">40</option>
+                            <option value="45">45</option>
+                            <option value="50">40</option>
+                        </select>
+
+
                         <div className='search-page-email-information'>
                             <img className='search-page-email-information-image' src={infoImg} alt=""/>
                             <div>

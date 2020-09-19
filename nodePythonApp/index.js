@@ -209,7 +209,7 @@ app.get('/api/store-metadata', (req, res) => {
     // });
 
     // spawn new child process to call the python script
-    const python = spawn('python', ['getData.py', req.query.login_user, req.query.login_pass]);
+    const python = spawn('python', ['getData.py', req.query.login_user, req.query.login_pass, req.query.numPosts]);
 
     // in close event we are sure that stream from child process is closed
     python.on('close', (code) => {
@@ -224,8 +224,8 @@ app.get('/api/store-metadata', (req, res) => {
         }
         else {
             res.status(200).send()
-            console.log(req.query.sendEmail)
-            if (req.query.sendEmail === true && req.query.email !== '') {
+            console.log('sendEmail', req.query.sendEmail, req.query.email)
+            if (req.query.sendEmail === 'true' && req.query.email !== '') {
               console.log('sending email...')
               sendEmail(req.query.email, req.query.login_user)
             }

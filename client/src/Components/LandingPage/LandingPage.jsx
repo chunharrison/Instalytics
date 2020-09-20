@@ -25,11 +25,6 @@ import xl from 'excel4node'
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
 
-// for harrison, mario can delete
-import Button from 'react-bootstrap/Button'
-import Modal from 'react-bootstrap/Modal'
-import Form from 'react-bootstrap/Form'
-
 const LandingPage = props => {
     //login select
     const [userType, setUserType] = useState('new');

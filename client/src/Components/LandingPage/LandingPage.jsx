@@ -57,7 +57,6 @@ const LandingPage = props => {
     const [activeData, setActiveData] = useState(0);
     const [activeValue, setActiveValue] = useState('averageLikes');
     const [dataKey, setDataKey] = useState(1);
-    const [topFiveData, setTopFiveData] = useState(null);
     const [topFiveModal, setTopFiveModal] = useState(false);
     const [topFiveLoading, setTopFiveLoading] = useState(false);
     let time = 0;
@@ -162,6 +161,7 @@ const LandingPage = props => {
         }
         axios.get('http://localhost:5000/api/start_instalytics', getDataOptions)
             .then(res => {
+                console.log(res.data)
                 let sortedData = res.data.sort(compare);
                 setData(sortedData);
                 setActiveData(sortedData[0]);
@@ -169,8 +169,8 @@ const LandingPage = props => {
 
         axios.get('http://localhost:5000/api/data-date', getDataOptions)
             .then(res => {
-                let month = new Date(Date.parse(res.data.date)).getUTCMonth() + 1;
-                let day = new Date(Date.parse(res.data.date)).getUTCDate();
+                let month = res.data.date.split('/')[1];
+                let day = res.data.date.split('/')[0];
                 setFetchedDate(`${day}/${month}`)
             })
             .catch(err => {
@@ -404,32 +404,7 @@ const LandingPage = props => {
     }
 
     function handleTopFiveClick() {
-        setTopFiveLoading(true);
-
-        const options = {
-            params: {
-                logged_in_username: username,
-                target_username: activeData.username
-            },
-            headers: {
-                'Access-Control-Allow-Credentials': true,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET',
-                'Access-Control-Allow-Headers': '*',
-            },
-        }
-
-        axios.get('http://localhost:5000/api/top-5-posts', options)
-        .then((response) => {
-            console.log(response.data)
-            setTopFiveData(response.data);
-            setTopFiveLoading(false)
-            setTopFiveModal(true);
-        })
-        .catch((error) => {
-            console.log(error)
-            setTopFiveLoading(false);
-        })
+        setTopFiveModal(true);       
     }
 
     function testEmail(e) {
@@ -456,18 +431,18 @@ const LandingPage = props => {
         { value: 'averageLikes', label: 'Average Likes' },
         { value: 'averageViews', label: 'Average Views' },
         { value: 'averageComments', label: 'Average Comments' },
-        { value: 'LVR', label: 'Like to Views Ratio' },
+        { value: 'VFR', label: 'Video Views to Follower Ratio' },
         { value: 'LFR', label: 'Like to Follower Ratio' },
-        { value: 'LCR', label: 'Like to Comment Ratio' },
+        { value: 'CFR', label: 'Comment to Follower Ratio' },
     ]
 
     const formatValue = value => Math.floor(value);
     const ratioFormatValue = value => Number(value).toFixed(2);
     
-    const topFive = !topFiveData ? null : topFiveData.map(function(item, i){
+    const topFive = !activeData.top5 ? null : activeData.top5.map(function(item, i){
         return <TopFive data={item}/>
     })
-                                            
+
     return (
         <div className='search-page-container'>
             <div className='nav'>
@@ -612,13 +587,13 @@ const LandingPage = props => {
                         <div className='search-page-data-ratios'>
                             <div className='search-page-data-average'>
                                 <div className='search-page-ratio-container'>
-                                    <img src={likesImg} className='search-page-data-image-ratio'/>
-                                    <p className='search-page-data-divide-ratio'>/</p>
                                     <img src={viewsImg} className='search-page-data-image-ratio'/>
+                                    <p className='search-page-data-divide-ratio'>/</p>
+                                    <img src={followersImg} className='search-page-data-image-ratio'/>
                                 </div>
                                 <AnimatedNumber
                                 className='search-page-data-value'
-                                value={activeData.LVR}
+                                value={activeData.VFR}
                                 duration={300}
                                 formatValue={ratioFormatValue}
                                 />                            
@@ -640,13 +615,13 @@ const LandingPage = props => {
                             <div className='divider'></div>
                             <div className='search-page-data-average'>
                                 <div className='search-page-ratio-container'>
-                                    <img src={likesImg} className='search-page-data-image-ratio'/>
-                                    <p className='search-page-data-divide-ratio'>/</p>
                                     <img src={commentsImg} className='search-page-data-image-ratio'/>
+                                    <p className='search-page-data-divide-ratio'>/</p>
+                                    <img src={followersImg} className='search-page-data-image-ratio'/>
                                 </div>                                
                                 <AnimatedNumber
                                 className='search-page-data-value'
-                                value={activeData.LCR}
+                                value={activeData.CFR}
                                 duration={300}
                                 formatValue={ratioFormatValue}
                                 />                            

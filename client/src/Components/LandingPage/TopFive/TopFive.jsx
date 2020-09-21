@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react' 
+import React from 'react' 
 import { Carousel } from 'react-responsive-carousel';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 
-import viewsImg from '../views.png';
-import postsImg from '../posts.png';
 import likesImg from '../likes.png';
 import commentsImg from '../comments.png';
-import followersImg from '../followers.png';
 
 const TopFive = props => {
     return (

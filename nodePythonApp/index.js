@@ -199,6 +199,7 @@ app.get('/api/store-metadata', (req, res) => {
     fs.mkdir(`./data/${req.query.login_user}`, {}, (err) => {
       if (err) console.log(err)
       let fetchedDate = new Date();
+      fetchedDate = fetchedDate.toLocaleDateString();
       fs.appendFile(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
         if (err) console.log('writeFile error', err)
       });
@@ -239,6 +240,7 @@ app.get('/api/update-metadata', (req,res) => {
   console.log(req.query.username)
 
   let fetchedDate = new Date();
+  fetchedDate = fetchedDate.toLocaleDateString();
   fs.writeFile(`./data/${req.query.username}/date.txt`, fetchedDate.toString(), (err) => {
     if (err) res.status(400).send({err: err});
     console.log('The file has been saved!');

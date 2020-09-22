@@ -1,0 +1,31 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Deploy CI
+
+on:
+  push:
+    branches: [ production ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        uses: appleboy/ssh-action@v0.1.2
+        with:
+          host: ${{secrets.SSH_HOST}}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            cd /var/www/instalytics.ca/Instalytics
+            git fetch origin production
+            git reset --hard origin/production
+            sudo rsync -av --delete /var/www/instalytics.ca/Instalytics/nodePythonApp/ /var/www/instalytics.ca/backend
+            sudo npm install --unsafe-perm
+            cd /var/www/instalytics.ca/Instalytics/client
+            sudo npm install --unsafe-perm
+            sudo npm run build --prefix /var/www/instalytics.ca/Instalytics/client/
+            sudo rsync -av --delete /var/www/instalytics.ca/Instalytics/client/build/ /var/www/instalytics.ca/html
+            pm2 reload server
+            sudo systemctl reload nginx

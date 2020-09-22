@@ -135,7 +135,7 @@ const LandingPage = props => {
     }
 
     function handleNumPostsChange(e) {
-        setNumPosts(e.target.value)
+        setNumPosts(e.value)
     }
 
     function handleEmailCheckboxChange(e) {
@@ -436,6 +436,15 @@ const LandingPage = props => {
         { value: 'CFR', label: 'Comment to Follower Ratio' },
     ]
 
+    const optionsNumber = [
+        { value: '5', label: '5' },
+        { value: '10', label: '10' },
+        { value: '15', label: '15' },
+        { value: '20', label: '20' },
+        { value: '25', label: '25' },
+        { value: '30', label: '30' },
+    ]
+
     const formatValue = value => Math.floor(value);
     const ratioFormatValue = value => Number(value).toFixed(2);
     
@@ -481,20 +490,8 @@ const LandingPage = props => {
                         <input className='search-page-input' type="password" value={password} placeholder='Password' onChange={e => handlePasswordChange(e)}/>
                         <span className='search-page-error'>{passwordErrorMessage}</span>
                         <span className='search-page-error login-error'>{loginErrorMessage}</span>
-                        <label for="numPosts">Number of Posts:</label>
-                        <select name="numPosts" id="numPosts" onChange={e => handleNumPostsChange(e)}>
-                            <option value="10">10</option>
-                            <option value="15">15</option>
-                            <option value="20">20</option>
-                            <option selected value="25">25</option>
-                            <option value="30">30</option>
-                            <option value="35">35</option>
-                            <option value="40">40</option>
-                            <option value="45">45</option>
-                            <option value="50">40</option>
-                        </select>
-
-
+                        <label className='search-page-dropdown-label' for="numPosts">Number of Posts:</label>
+                        <Dropdown name="numPosts" id="numPosts" options={optionsNumber} onChange={(e) => handleNumPostsChange(e)} value={'5'} placeholder="Select an option" />
                         <div className='search-page-email-information'>
                             <img className='search-page-email-information-image' src={infoImg} alt=""/>
                             <div>

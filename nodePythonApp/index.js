@@ -217,7 +217,6 @@ app.get('/api/store-metadata', (req, res) => {
         console.log(`child process close all stdio with code ${code}`);
 
         const files = fs.readdirSync(`./data/${req.query.login_user}/`)
-        console.log(files)
         if (files.length === 1) {
             rimraf.sync(`./data/${req.query.login_user}`)
 
@@ -278,7 +277,6 @@ app.get('/api/start_instalytics', (req, res) => {
     fs.readdir(`./data/${req.query.username}/`, (err, files) => {
         // key = userName, value = average views of their posts
         let retreivedData = []
-        console.log(files)
         // loop through all the users that this person follows
         files.forEach(mediaMetadataJSON => {
           if (mediaMetadataJSON === 'date.txt') return 
@@ -316,7 +314,7 @@ app.get('/api/start_instalytics', (req, res) => {
                 const currentMetadata = metadataList[i]
                 let caption = currentMetadata.edge_media_to_caption.edges[0] ? currentMetadata.edge_media_to_caption.edges[0].node.text : ''
                 top5Posts.push({
-                    images: currentMetadata.urls,
+                    images: currentMetadata.is_video ? null : currentMetadata.urls,
                     likes: currentMetadata.edge_media_preview_like.count,
                     comments: currentMetadata.edge_media_to_comment.count,
                     caption: caption,

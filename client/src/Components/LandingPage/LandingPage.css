@@ -90,6 +90,12 @@ canvas {
     margin-right:1em;
 }
 
+.search-page-dropdown-label {
+    color:white;
+    font-family:opensans-regular;
+    margin:0.5em;
+}
+
 .search-page-date-button {
     border:none;
     background-color: transparent;
@@ -580,6 +586,16 @@ canvas {
 
 .carousel {
     border-radius: 10px;
+}
+
+.search-page-top-five-placeholder{
+    height:100%;
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content: center;
+    align-items:center;
+    border-radius:10px;
 }
 
 .spinner {

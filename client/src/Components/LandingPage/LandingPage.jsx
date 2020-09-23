@@ -25,6 +25,8 @@ import xl from 'excel4node'
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
 
+// require('dotenv').config(); // Loading dotenv to have access to env variables
+
 const LandingPage = props => {
     //login select
     const [userType, setUserType] = useState('new');
@@ -38,6 +40,7 @@ const LandingPage = props => {
     const [email, setEmail] = useState('')
     const [sendEmail, setSendEmail] = useState(false)
     const [emailErrorMessage, setEmailErrorMessage] = useState('')
+    const [storeMetadataCalled, setStoreMetadataCalled] = useState(false)
     // login input 2
     const [usernameCheck, setUsernameCheck] = useState('')
     const [usernameCheckErrorMessage, setUsernameCheckErrorMessage] = useState('')
@@ -159,7 +162,7 @@ const LandingPage = props => {
                 'Access-Control-Allow-Headers': '*',
             },
         }
-        axios.get('http://localhost:5000/api/start_instalytics', getDataOptions)
+        axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/start_instalytics', getDataOptions)
             .then(res => {
                 console.log(res.data)
                 let sortedData = res.data.sort(compare);
@@ -167,7 +170,7 @@ const LandingPage = props => {
                 setActiveData(sortedData[0]);
             })
 
-        axios.get('http://localhost:5000/api/data-date', getDataOptions)
+        axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/data-date', getDataOptions)
             .then(res => {
                 let month = res.data.date.split('/')[1];
                 let day = res.data.date.split('/')[0];
@@ -182,7 +185,7 @@ const LandingPage = props => {
  
     function handleSubmit(e) {
         e.preventDefault()
-
+        console.log(process.env)
         let goodToGo = true
 
         // check username
@@ -217,7 +220,7 @@ const LandingPage = props => {
         }
         
         
-        if (goodToGo) {
+        if (goodToGo && !storeMetadataCalled) {
             const options = {
                 params: {
                     login_user: username,
@@ -235,11 +238,12 @@ const LandingPage = props => {
             }
 
             console.log('calling store-metadata')
-            axios.get('http://localhost:5000/api/store-metadata', options)
+            setStoreMetadataCalled(true)
+            axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/store-metadata', options)
                 .then(res => {
                     // setSearched(true);
                     // getData(username);
-                    window.location.replace(`http://localhost:3000/?username=${username}`)
+                    window.location.replace(process.env.REACT_APP_FRONTEND_ADDRESS + `/?username=${username}`)
                     setLoginErrorMessage('')
                     
             }).catch(res => {
@@ -276,7 +280,7 @@ const LandingPage = props => {
                 },
             }
 
-            axios.get('http://localhost:5000/api/check-username', options)
+            axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/check-username', options)
                 .then(res => {
                     console.log('handleSubmit2 GOOD')
                     handleWelcomeBackClick(e);                })
@@ -302,7 +306,7 @@ const LandingPage = props => {
             },
         }
 
-        axios.get('http://localhost:5000/api/check-username', options)
+        axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/check-username', options)
             .then(res => {
                 setUsername(usernameQuery)
                 setSearched(true);
@@ -355,7 +359,7 @@ const LandingPage = props => {
         setRefreshPassword('')
         setRefreshPopupShow(false)
 
-        axios.get('http://localhost:5000/api/update-metadata', options)
+        axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/update-metadata', options)
             .then(res => {
                 console.log(res)
                 getData(username)
@@ -369,7 +373,7 @@ const LandingPage = props => {
     function logout(e) {
         e.preventDefault()
 
-        window.location.replace('http://localhost:3000/')
+        window.location.replace(process.env.REACT_APP_FRONTEND_ADDRESS + '/')
     }
 
     // SAVE TO EXCEL
@@ -400,7 +404,7 @@ const LandingPage = props => {
     function handleWelcomeBackClick(e) {
         e.preventDefault()
 
-        window.location.replace(`http://localhost:3000/?username=${usernameCheck}`)
+        window.location.replace(process.env.REACT_APP_FRONTEND_ADDRESS + `/?username=${usernameCheck}`)
     }
 
     function handleTopFiveClick() {
@@ -423,7 +427,7 @@ const LandingPage = props => {
             },
         }
 
-        axios.get('http://localhost:5000/api/test-email', options)
+        axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/test-email', options)
     }
 
     let max = Math.max.apply(Math, data.map(function(entry) { if (entry[activeValue] !== 'NaN') {return Number(entry[activeValue]);} else {return 0} }))

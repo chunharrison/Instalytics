@@ -195,7 +195,7 @@ app.get('/api/store-metadata', (req, res) => {
 
     console.log(req.query.login_user)
 
-    // fs.mkdirSync(`./data/${req.query.login_user}`)
+    
     fs.mkdir(`./data/${req.query.login_user}`, {}, (err) => {
       if (err) console.log(err)
       let fetchedDate = new Date();
@@ -210,29 +210,33 @@ app.get('/api/store-metadata', (req, res) => {
     // });
 
     // spawn new child process to call the python script
-    const python = spawn('python', ['getData.py', req.query.login_user, req.query.login_pass, req.query.numPosts]);
+    // const python = spawn('python', ['getData.py', req.query.login_user, req.query.login_pass, req.query.numPosts]);
+    exec(`instagram-scraper --followings-input --login-user ${req.query.login_user} --login-pass ${req.query.login_pass} --destination ./data/${req.query.login_user}/ --media-types none --media-metadata --maximum ${req.query.numPosts} --profile-metadata --latest`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+      console.error(`stderr: ${stderr}`);
 
-    // in close event we are sure that stream from child process is closed
-    python.on('close', (code) => {
-        console.log(`child process close all stdio with code ${code}`);
+      const files = fs.readdirSync(`./data/${req.query.login_user}/`)
+      console.log(files)
+      // we did not fetch anything
+      if (files.length === 1) {
+        rimraf.sync(`./data/${req.query.login_user}`)
 
-        const files = fs.readdirSync(`./data/${req.query.login_user}/`)
-        console.log(files)
-        if (files.length === 1) {
-            rimraf.sync(`./data/${req.query.login_user}`)
-
-            res.status(400).send({message: 'Incorrect password or username'})
+        res.status(400).send({message: 'Incorrect password or username'})
+      }
+      // all good
+      else {
+        res.status(200).send()
+        console.log('sendEmail', req.query.sendEmail, req.query.email)
+        if (req.query.sendEmail === 'true' && req.query.email !== '') {
+          console.log('sending email...')
+          sendEmail(req.query.email, req.query.login_user)
         }
-        else {
-            res.status(200).send()
-            console.log('sendEmail', req.query.sendEmail, req.query.email)
-            if (req.query.sendEmail === 'true' && req.query.email !== '') {
-              console.log('sending email...')
-              sendEmail(req.query.email, req.query.login_user)
-            }
-        }
-    });
-    
+      }
+    })
 })
 
 app.get('/api/update-metadata', (req,res) => {

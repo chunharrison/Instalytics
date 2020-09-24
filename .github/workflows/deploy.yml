@@ -30,7 +30,7 @@ jobs:
             sudo npm install --unsafe-perm
             cd /var/www/instalytics.ca/Instalytics/client
             sudo npm install --unsafe-perm
-            sudo touch /var/www/cosign.pro/CollaborativeForms/client/.env.production
+            sudo touch /var/www/instalytics.ca/Instalytics/client/.env.production
             echo REACT_APP_BACKEND_ADDRESS=https://instalytics.ca | sudo tee -a /var/www/instalytics.ca/Instalytics/client/.env.production
             echo REACT_APP_FRONTEND_ADDRESS=https://instalytics.ca | sudo tee -a /var/www/instalytics.ca/Instalytics/client/.env.production
             sudo npm run build --prefix /var/www/instalytics.ca/Instalytics/client/

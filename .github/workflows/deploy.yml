@@ -22,9 +22,17 @@ jobs:
             git fetch origin production
             git reset --hard origin/production
             sudo rsync -av --delete /var/www/instalytics.ca/Instalytics/nodePythonApp/ /var/www/instalytics.ca/backend
+            cd /var/www/instalytics.ca/backend
+            sudo touch /var/www/instalytics.ca/backend/.env
+            echo FRONTENT_ADDRESS=https://instalytics.ca | sudo tee -a /var/www/instalytics.ca/backend/.env
+            echo MAILER_LOGIN=${{ secrets.MAILER_LOGIN }} | sudo tee -a /var/www/instalytics.ca/backend/.env
+            echo MAILER_PASSWORD=${{ secrets.MAILER_PASSWORD }} | sudo tee -a /var/www/instalytics.ca/backend/.env
             sudo npm install --unsafe-perm
             cd /var/www/instalytics.ca/Instalytics/client
             sudo npm install --unsafe-perm
+            sudo touch /var/www/cosign.pro/CollaborativeForms/client/.env.production
+            echo REACT_APP_BACKEND_ADDRESS=https://instalytics.ca | sudo tee -a /var/www/instalytics.ca/Instalytics/client/.env.production
+            echo REACT_APP_FRONTEND_ADDRESS=https://instalytics.ca | sudo tee -a /var/www/instalytics.ca/Instalytics/client/.env.production
             sudo npm run build --prefix /var/www/instalytics.ca/Instalytics/client/
             sudo rsync -av --delete /var/www/instalytics.ca/Instalytics/client/build/ /var/www/instalytics.ca/html
             pm2 reload server

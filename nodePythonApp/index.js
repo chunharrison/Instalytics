@@ -219,17 +219,9 @@ app.get('/api/store-metadata', (req, res) => {
       console.log(`stdout: ${stdout}`);
       console.error(`stderr: ${stderr}`);
 
-<<<<<<< HEAD
-      const files = fs.readdirSync(`./data/${req.query.login_user}/`)
-      console.log(files)
-      // we did not fetch anything
-      if (files.length === 1) {
-        rimraf.sync(`./data/${req.query.login_user}`)
-=======
         const files = fs.readdirSync(`./data/${req.query.login_user}/`)
         if (files.length === 1) {
             rimraf.sync(`./data/${req.query.login_user}`)
->>>>>>> e9211f0a61bfa54ae9f6fff2d091102c365b76e2
 
         res.status(400).send({message: 'Incorrect password or username'})
       }

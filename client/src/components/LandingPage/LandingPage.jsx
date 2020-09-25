@@ -451,8 +451,8 @@ const LandingPage = props => {
 
     const formatValue = value => Math.floor(value);
     const ratioFormatValue = value => Number(value).toFixed(2);
-    
-    const topFive = !activeData.top5 ? null : activeData.top5.map(function(item, i){
+    console.log(activeData.top5)
+    const topFive = !activeData.top5 || activeData.top5 === 'NaN' ? null : activeData.top5.map(function(item, i){
         return <TopFive data={item}/>
     })
 

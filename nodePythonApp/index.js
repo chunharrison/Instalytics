@@ -312,7 +312,7 @@ app.get('/api/store-metadata', (req, res) => {
       })
       // let execMetadata = exec(`instagram-scraper --followings-input --login-user ${req.query.login_user} --login-pass ${req.query.login_pass} --destination ./data/${req.query.login_user}/ --media-types none --media-metadata --maximum ${req.query.numPosts} --profile-metadata --latest`)
       // console.log(execMetadata)
-      res.status(200).send()
+      // res.status(200).send()
     })
     
 

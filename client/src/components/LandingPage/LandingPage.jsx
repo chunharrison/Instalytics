@@ -256,11 +256,11 @@ const LandingPage = props => {
             console.log('calling store-metadata')
             
             axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/store-metadata', options)
-                .then(res => {
-                    // variables
+                // .then(res => {
+                //     // variables
 
-                    setscraping(true)
-                })
+                //     setscraping(true)
+                // })
                 // .catch(res => {
                 //     console.log('store-meta FAILED', res)
                 //     if (res.response) {
@@ -272,7 +272,7 @@ const LandingPage = props => {
                 //     setscraping(false)
                 //     clearInterval(intervalId)
                 // })
-
+            setscraping(true)
             let intervalId = setInterval(() => {
                 console.log('calling scrape-status')
                 axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/scrape-status', options2)
@@ -290,6 +290,7 @@ const LandingPage = props => {
                         setScrapePercentage(res.data.percentage)
                     })
                     .catch(err => {
+                        console.log(err)
                         setscraping(false)
                         setLoginErrorMessage(err.response.data.message)
                         clearInterval(intervalId)
@@ -547,7 +548,7 @@ const LandingPage = props => {
                                     <span className='search-page-error'>{passwordErrorMessage}</span>
                                     <span className='search-page-error login-error'>{loginErrorMessage}</span>
                                     <label className='search-page-dropdown-label' for="numPosts">Number of Posts:</label>
-                                    <Dropdown name="numPosts" id="numPosts" options={optionsNumber} onChange={(e) => handleNumPostsChange(e)} value={'5'} placeholder="Select an option" />
+                                    <Dropdown name="numPosts" id="numPosts" options={optionsNumber} onChange={(e) => handleNumPostsChange(e)} value={'25'} placeholder="Select an option" />
                                     <div className='search-page-email-information'>
                                         <img className='search-page-email-information-image' src={infoImg} alt=""/>
                                         <div>

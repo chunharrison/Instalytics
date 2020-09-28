@@ -1,6 +1,6 @@
 require('dotenv').config()
 const express = require('express')
-const {exec, spawn} = require('child_process');
+const {exec, execSync} = require('child_process');
 const app = express()
 const cors = require('cors')
 const fs = require('fs');
@@ -186,55 +186,126 @@ function sendEmail(respondentEmail, respondentUsername) {
     })
 }
 
-app.get('/api/store-metadata', (req, res) => {
-    var dataToSend;
+app.get('/api/scrape-status', (req, res) => {
+  console.log('performing scrape-status!')
+  // error in '/api/store-metadata'
+  if (fs.existsSync(`./data/${req.query.username}/error.txt`)) {
+    rimraf.sync(`./data/${req.query.username}`)
+    res.status(400).send({message: 'Incorrect password or username'})
+    return
+  } else if (fs.existsSync(`./data/${req.query.username}/${req.query.username}.json`)) {
+    let profileMetadataJSON = require(`./data/${req.query.username}/${req.query.username}.json`)
+    let followingCount = profileMetadataJSON.GraphProfileInfo.info.following_count
 
-    if (req.query.login_user === '') {
-        return res.status(400).send({message: 'Incorrect password or usernames'});
+    const files = fs.readdirSync(`./data/${req.query.username}/`)
+    let fileCount = files.length-2
+
+    // scraping complete
+    if (followingCount === fileCount) {
+      console.log(followingCount, fileCount)
+      // email
+      console.log('sendEmail', req.query.sendEmail, req.query.email)
+      if (req.query.sendEmail === 'true' && req.query.email !== '') {
+        console.log('sending email...')
+        sendEmail(req.query.email, req.query.login_user)
+      }
+
+      res.status(200).send({
+        status: 'finished'
+      })
+      return
     }
 
-    console.log(req.query.login_user)
 
+    let scrapePercentage = Math.ceil((fileCount / followingCount) * 100)
+    console.log('scrape-status', fileCount, followingCount)
+    res.status(200).send({
+      percentage: scrapePercentage,
+      status: 'scraping'
+    })
+    return
     
+  } else {
+    console.log('scrape-status', 'file not found')
+    res.status(200).send({
+      percentage: 0,
+      status: 'scraping'
+    })
+  }
+})
+
+app.get('/api/store-metadata', (req, res) => {
+    console.log('performing store-metadata!')
+    // the folder already exists so delete it
+    if (fs.existsSync(`./data/${req.query.login_user}`)) rimraf.sync(`./data/${req.query.login_user}`)
+
     fs.mkdir(`./data/${req.query.login_user}`, {}, (err) => {
+      // get the profile metadata
+      execSync(`instagram-scraper ${req.query.login_user} --destination ./data/${req.query.login_user}/ --media-types none --profile-metadata`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`exec error 1: ${error}`);
+          res.status(400).send({message: 'Incorrect password or username'})
+          return
+        }
+      })
+
       if (err) console.log(err)
       let fetchedDate = new Date();
       fetchedDate = fetchedDate.toLocaleDateString();
-      fs.appendFile(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
-        if (err) console.log('writeFile error', err)
+
+      fs.appendFileSync(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
+        if (err) console.log('appendFile error', err)
       });
-    })
-    // let fetchedDate = new Date();
-    // fs.appendFile(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
-    //   if (err) console.log('writeFile error', err)
-    // });
 
-    // spawn new child process to call the python script
-    // const python = spawn('python', ['getData.py', req.query.login_user, req.query.login_pass, req.query.numPosts]);
-    exec(`instagram-scraper --followings-input --login-user ${req.query.login_user} --login-pass ${req.query.login_pass} --destination ./data/${req.query.login_user}/ --media-types none --media-metadata --maximum ${req.query.numPosts} --profile-metadata --latest`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`exec error: ${error}`);
-        return;
-      }
-      console.log(`stdout: ${stdout}`);
-      console.error(`stderr: ${stderr}`);
+      // //file exists
+      // if (fs.existsSync(`./data/${req.query.login_user}/date.txt`)) {
+      //   fs.writeFile(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
+      //     if (err) console.log('writeFile error', err)
+      //   });
+      // } 
+      // // does not exist
+      // else {
+      //   fs.appendFile(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
+      //     if (err) console.log('appendFile error', err)
+      //   });
+      // }
 
-        const files = fs.readdirSync(`./data/${req.query.login_user}/`)
-        if (files.length === 1) {
-            rimraf.sync(`./data/${req.query.login_user}`)
-
-        res.status(400).send({message: 'Incorrect password or username'})
-      }
-      // all good
-      else {
-        res.status(200).send()
-        console.log('sendEmail', req.query.sendEmail, req.query.email)
-        if (req.query.sendEmail === 'true' && req.query.email !== '') {
-          console.log('sending email...')
-          sendEmail(req.query.email, req.query.login_user)
+      exec(`instagram-scraper --followings-input --login-user ${req.query.login_user} --login-pass ${req.query.login_pass} --destination ./data/${req.query.login_user}/ --media-types none --media-metadata --maximum ${req.query.numPosts} --profile-metadata --latest`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`exec error 2: ${error}`);
+          fs.appendFileSync(`./data/${req.query.login_user}/error.txt`, error, (err) => {
+            // if (err) console.log('appendFile error', err)
+          });
+          // res.status(400).send({message: 'Incorrect password or username'})
         }
-      }
+
+        // const files = fs.readdirSync(`./data/${req.query.login_user}/`)
+        // if (files.length === 2) {
+        //   rimraf.sync(`./data/${req.query.login_user}`)
+
+        //   res.status(400).send({message: 'Incorrect password or username'})
+        //   return
+        // }
+
+        // // all good
+        // else {
+        //   res.status(200).send()
+        //   console.log('sendEmail', req.query.sendEmail, req.query.email)
+        //   if (req.query.sendEmail === 'true' && req.query.email !== '') {
+        //     console.log('sending email...')
+        //     sendEmail(req.query.email, req.query.login_user)
+        //   }
+        //   return
+        // }
+      })
+      // let execMetadata = exec(`instagram-scraper --followings-input --login-user ${req.query.login_user} --login-pass ${req.query.login_pass} --destination ./data/${req.query.login_user}/ --media-types none --media-metadata --maximum ${req.query.numPosts} --profile-metadata --latest`)
+      // console.log(execMetadata)
+      res.status(200).send()
     })
+    
+
+    
+  return
 })
 
 app.get('/api/update-metadata', (req,res) => {
@@ -278,6 +349,12 @@ app.get('/api/start_instalytics', (req, res) => {
     console.log('performing start_instalytics!')
     console.log(req.query.username)
     fs.readdir(`./data/${req.query.username}/`, (err, files) => {
+      if (fs.existsSync(`./data/${req.query.username}/error.txt`) || files.length === 2 || files.length === 0) {
+        rimraf.sync(`./data/${req.query.username}/`)
+        res.status(400).send() 
+        return
+      }
+
         // key = userName, value = average views of their posts
         let retreivedData = []
         // loop through all the users that this person follows

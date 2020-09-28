@@ -25,7 +25,7 @@ import xl from 'excel4node'
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
 
-// require('dotenv').config(); // Loading dotenv to have access to env variables
+import ProgressBar from 'react-bootstrap/ProgressBar'
 
 const LandingPage = props => {
     //login select
@@ -55,6 +55,8 @@ const LandingPage = props => {
 
     const canvasElement = useRef(null);
     const [context, setContext] = useState(null)
+    const [scraping, setscraping] = useState(false)
+    const [scrapePercentage, setScrapePercentage] = useState(0)
     const [searched, setSearched] = useState(false);
     const [data, setData] = useState([]);
     const [activeData, setActiveData] = useState(0);
@@ -169,6 +171,9 @@ const LandingPage = props => {
                 setData(sortedData);
                 setActiveData(sortedData[0]);
             })
+            .catch(err => {
+                window.location.replace(process.env.REACT_APP_FRONTEND_ADDRESS + '/')
+            })
 
         axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/data-date', getDataOptions)
             .then(res => {
@@ -220,12 +225,23 @@ const LandingPage = props => {
         }
         
         
-        if (goodToGo && !storeMetadataCalled) {
+        if (goodToGo) {
             const options = {
                 params: {
                     login_user: username,
                     login_pass: password,
-                    numPosts: numPosts,
+                    numPosts: numPosts
+                },
+                headers: {
+                    'Access-Control-Allow-Credentials': true,
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET',
+                    'Access-Control-Allow-Headers': '*',
+                },
+            }
+            const options2 = {
+                params: {
+                    username: username,
                     sendEmail: sendEmail,
                     email: email
                 },
@@ -238,22 +254,48 @@ const LandingPage = props => {
             }
 
             console.log('calling store-metadata')
-            setStoreMetadataCalled(true)
+            
             axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/store-metadata', options)
                 .then(res => {
-                    // setSearched(true);
-                    // getData(username);
-                    window.location.replace(process.env.REACT_APP_FRONTEND_ADDRESS + `/?username=${username}`)
-                    setLoginErrorMessage('')
-                    
-            }).catch(res => {
-                if (res.response) {
-                    console.log(res.response.data.message)
-                    setLoginErrorMessage(res.response.data.message)
-                } else {
-                    console.log(res)
-                }
-            })
+                    // variables
+
+                    setscraping(true)
+                })
+                // .catch(res => {
+                //     console.log('store-meta FAILED', res)
+                //     if (res.response) {
+                //         console.log(res.response.data.message)
+                //         setLoginErrorMessage(res.response.data.message)
+                //     } else {
+                //         console.log(res)
+                //     }
+                //     setscraping(false)
+                //     clearInterval(intervalId)
+                // })
+
+            let intervalId = setInterval(() => {
+                console.log('calling scrape-status')
+                axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/scrape-status', options2)
+                    .then(res => {
+                        console.log(res.data)
+                        if (res.data.status === 'finished') {
+                            setLoginErrorMessage('')
+                            setScrapePercentage(100)
+                            setscraping(false)
+                            clearInterval(intervalId)
+
+                            window.location.replace(process.env.REACT_APP_FRONTEND_ADDRESS + `/?username=${username}`)
+                        }
+                        
+                        setScrapePercentage(res.data.percentage)
+                    })
+                    .catch(err => {
+                        setscraping(false)
+                        setLoginErrorMessage(err.response.data.message)
+                        clearInterval(intervalId)
+                    })
+            }, 3000)
+
         } else {
             console.log("we need something")
         }
@@ -316,6 +358,7 @@ const LandingPage = props => {
                 console.log('no valid username in param')
                 setSearched(false);
             })
+        return
     }
 
 
@@ -451,7 +494,7 @@ const LandingPage = props => {
 
     const formatValue = value => Math.floor(value);
     const ratioFormatValue = value => Number(value).toFixed(2);
-    console.log(activeData.top5)
+    
     const topFive = !activeData.top5 || activeData.top5 === 'NaN' ? null : activeData.top5.map(function(item, i){
         return <TopFive data={item}/>
     })
@@ -488,29 +531,40 @@ const LandingPage = props => {
                         <p className='search-page-user-returning' onClick={() => setUserType('returning')} style={{color: `${userType === 'returning' ? 'white' : 'rgba(255, 255, 255, 0.47)'}`}}>Returning User</p>
                     </div>
                     {userType === 'new' ? 
-                    <form onSubmit={e => handleSubmit(e)} className='search-page-form'>
-                        <input className='search-page-input' type="text" value={username} placeholder='Username' onChange={e => handleAccountChange(e)}/>
-                        <span className='search-page-error'>{usernameErrorMessage}</span>
-                        <input className='search-page-input' type="password" value={password} placeholder='Password' onChange={e => handlePasswordChange(e)}/>
-                        <span className='search-page-error'>{passwordErrorMessage}</span>
-                        <span className='search-page-error login-error'>{loginErrorMessage}</span>
-                        <label className='search-page-dropdown-label' for="numPosts">Number of Posts:</label>
-                        <Dropdown name="numPosts" id="numPosts" options={optionsNumber} onChange={(e) => handleNumPostsChange(e)} value={'5'} placeholder="Select an option" />
-                        <div className='search-page-email-information'>
-                            <img className='search-page-email-information-image' src={infoImg} alt=""/>
-                            <div>
-                                <p>If you choose to fetch a lot of posts, it will take a while.</p>
-                                <p>You can opt to get off the website and have us email you when the data is ready.</p>
-                            </div>
+                        <div>
+                            {
+                                scraping
+                                ?
+                                <div>
+                                    {scrapePercentage}%
+                                    <ProgressBar variant="success" now={parseInt(scrapePercentage, 10)} label={`${scrapePercentage}%`}/>
+                                </div>
+                                :
+                                <form onSubmit={e => handleSubmit(e)} className='search-page-form'>
+                                    <input className='search-page-input' type="text" value={username} placeholder='Username' onChange={e => handleAccountChange(e)}/>
+                                    <span className='search-page-error'>{usernameErrorMessage}</span>
+                                    <input className='search-page-input' type="password" value={password} placeholder='Password' onChange={e => handlePasswordChange(e)}/>
+                                    <span className='search-page-error'>{passwordErrorMessage}</span>
+                                    <span className='search-page-error login-error'>{loginErrorMessage}</span>
+                                    <label className='search-page-dropdown-label' for="numPosts">Number of Posts:</label>
+                                    <Dropdown name="numPosts" id="numPosts" options={optionsNumber} onChange={(e) => handleNumPostsChange(e)} value={'5'} placeholder="Select an option" />
+                                    <div className='search-page-email-information'>
+                                        <img className='search-page-email-information-image' src={infoImg} alt=""/>
+                                        <div>
+                                            <p>If you choose to fetch a lot of posts, it will take a while.</p>
+                                            <p>You can opt to get off the website and have us email you when the data is ready.</p>
+                                        </div>
+                                    </div>
+                                    <div className="cboxB">
+                                        <input type="checkbox" id="boxB" checked={sendEmail} onChange={e => handleEmailCheckboxChange(e)}/>
+                                        <label for="boxB">Opt In</label>
+                                    </div>
+                                    <input className='search-page-input' type="email" value={email} placeholder='Email' onChange={e => handleEmailChange(e)} disabled={sendEmail ? "" : "disabled"} style={{opacity: `${sendEmail ? '': '0.3'}`}}/>
+                                    <span className='search-page-error'>{emailErrorMessage}</span>
+                                    <button className='search-page-submit' type="submit">Analyze</button>
+                                </form>
+                            }
                         </div>
-                        <div className="cboxB">
-                            <input type="checkbox" id="boxB" checked={sendEmail} onChange={e => handleEmailCheckboxChange(e)}/>
-                            <label for="boxB">Opt In</label>
-                        </div>
-                        <input className='search-page-input' type="email" value={email} placeholder='Email' onChange={e => handleEmailChange(e)} disabled={sendEmail ? "" : "disabled"} style={{opacity: `${sendEmail ? '': '0.3'}`}}/>
-                        <span className='search-page-error'>{emailErrorMessage}</span>
-                        <button className='search-page-submit' type="submit">Analyze</button>
-                    </form>
                     :
                     <form onSubmit={e => handleSubmit2(e)} className='search-page-form'>
                         <input className='search-page-input' type="text" value={usernameCheck} placeholder='Username' onChange={e => handleAccountCheckChange(e)}/>

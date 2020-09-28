@@ -11,15 +11,10 @@ const port = 5000
 
 app.use(cors({
   credentials: true,
-  origin: 'http://localhost:3000',
-  "Access-Control-Allow-Origin": "http://localhost:3000",
+  origin: '*',
+  "Access-Control-Allow-Origin": "*",
 }));
 
-app.use(cors({
-  credentials: true,
-  origin: 'https://instalytics.ca',
-  "Access-Control-Allow-Origin": "https://instalytics.ca",
-}));
 
 app.get('/api/test-email', (req, res) => {
   sendEmail(req.query.email, req.query.uname)

@@ -244,7 +244,9 @@ app.get('/api/store-metadata', (req, res) => {
       execSync(`instagram-scraper ${req.query.login_user} --destination ./data/${req.query.login_user}/ --media-types none --profile-metadata`, (error, stdout, stderr) => {
         if (error) {
           console.error(`exec error 1: ${error}`);
-          res.status(400).send({message: 'Incorrect password or username'})
+          fs.appendFileSync(`./data/${req.query.login_user}/error.txt`, error, (err) => {
+            // if (err) console.log('appendFile error', err)
+          });
           return
         }
       })
@@ -255,6 +257,10 @@ app.get('/api/store-metadata', (req, res) => {
 
       fs.appendFileSync(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
         if (err) console.log('appendFile error', err)
+        fs.appendFileSync(`./data/${req.query.login_user}/error.txt`, error, (err) => {
+          // if (err) console.log('appendFile error', err)
+        });
+        return
       });
 
       // //file exists
@@ -276,6 +282,7 @@ app.get('/api/store-metadata', (req, res) => {
           fs.appendFileSync(`./data/${req.query.login_user}/error.txt`, error, (err) => {
             // if (err) console.log('appendFile error', err)
           });
+          return
           // res.status(400).send({message: 'Incorrect password or username'})
         }
 

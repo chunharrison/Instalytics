@@ -23,6 +23,8 @@ canvas {
     z-index:-1;
     width: 100%;
     height: 100%;
+    min-height:650px;
+    min-width:500px;
     transition: height 500ms, opacity 500ms;
 }
 
@@ -181,6 +183,12 @@ canvas {
     transition: height 500ms;
 }
 
+.search-page-search-container-inactive {
+    min-height: 650px;
+    min-width:500px;
+
+}
+
 .search-page-chart-container {
     height:calc(100% - 6em);
     width:70%;
@@ -287,6 +295,7 @@ canvas {
 
 .search-page-data-container {
     height:calc(100vh - 60px);
+    min-height:790px;
     width:100vw;
     background-color:rgb(250, 250, 250);
     display:flex;

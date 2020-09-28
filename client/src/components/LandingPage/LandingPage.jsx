@@ -477,7 +477,7 @@ const LandingPage = props => {
                     }
                 </div>
             </div>
-            <div className='search-page-search-container' style={{height: `${searched ? '60px' : ''}`}}>
+            <div className={`search-page-search-container ${searched ? '' : 'search-page-search-container-inactive'}`} style={{height: `${searched ? '60px' : ''}`}}>
                 <canvas ref={canvasElement} id="canvas" width='32px' height={`${searched ? '5px' : '32px'}`} style={{height: `${searched ? '60px' : ''}`, opacity: `${searched ? '0.7' : ''}`}}/>
                 {searched ? 
                 <label className='search-page-username-label'>{username}</label>

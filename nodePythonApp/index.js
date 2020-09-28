@@ -9,7 +9,17 @@ const rimraf = require("rimraf");
 const nodemailer = require('nodemailer');
 const port = 5000
 
-app.use(cors())
+app.use(cors({
+  credentials: true,
+  origin: 'http://localhost:3000',
+  "Access-Control-Allow-Origin": "http://localhost:3000",
+}));
+
+app.use(cors({
+  credentials: true,
+  origin: 'https://instalytics.ca',
+  "Access-Control-Allow-Origin": "https://instalytics.ca",
+}));
 
 app.get('/api/test-email', (req, res) => {
   sendEmail(req.query.email, req.query.uname)

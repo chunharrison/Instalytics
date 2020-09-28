@@ -256,11 +256,11 @@ const LandingPage = props => {
             console.log('calling store-metadata')
             
             axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/store-metadata', options)
-                // .then(res => {
-                //     // variables
-
-                //     setscraping(true)
-                // })
+                .then(res => {
+                    // variables
+                    
+                    // setscraping(true)
+                })
                 // .catch(res => {
                 //     console.log('store-meta FAILED', res)
                 //     if (res.response) {

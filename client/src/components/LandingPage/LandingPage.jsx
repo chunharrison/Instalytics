@@ -8,6 +8,7 @@ import axios from 'axios'
 import validator from 'validator';
 import {isEmpty} from 'is-empty'
 import queryString from 'query-string';
+import { withResizeDetector } from 'react-resize-detector';
 
 import infoImg from './info.png';
 import viewsImg from './views.png';
@@ -24,8 +25,6 @@ import Excel from 'exceljs'
 import xl from 'excel4node'
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
-
-import ProgressBar from 'react-bootstrap/ProgressBar'
 
 const LandingPage = props => {
     //login select
@@ -292,7 +291,9 @@ const LandingPage = props => {
                     .catch(err => {
                         console.log(err)
                         setscraping(false)
-                        setLoginErrorMessage(err.response.data.message)
+                        if (err.response) {
+                            setLoginErrorMessage(err.response.data.message)
+                        }
                         clearInterval(intervalId)
                     })
             }, 3000)
@@ -537,8 +538,12 @@ const LandingPage = props => {
                                 scraping
                                 ?
                                 <div>
-                                    {scrapePercentage}%
-                                    <ProgressBar variant="success" now={parseInt(scrapePercentage, 10)} label={`${scrapePercentage}%`}/>
+                                    <div className='progress-bar'>
+                                        <div className='progress-bar-content' style={{width: `${scrapePercentage / 100 * 360}px`}}>
+
+                                        </div>
+                                    </div>
+                                    <p className='progress-percentage'>{scrapePercentage}%</p>
                                 </div>
                                 :
                                 <form onSubmit={e => handleSubmit(e)} className='search-page-form'>
@@ -580,23 +585,25 @@ const LandingPage = props => {
                 <div className='search-page-chart-container'>
                     <Dropdown options={options} onChange={(e) => handleSort(e)} value={activeValue} placeholder="Select an option" />
                     {data.length !== 0 ?
-                    <ResponsiveContainer className='search-page-data' width='100%' height='95%'>
-                        
-                        <BarChart data={data} layout='vertical' key={dataKey} margin={{ top: 10, left: 10, right: 10, bottom: 10 }} onClick={(data, index) => handleBarChartClick(data, index)}>
-                            <CartesianGrid strokeDasharray="5 5" horizontal={false} />
-                            <YAxis type='category' dataKey="username" width={130}  tickLine={false}/>
-                            <XAxis type='number' domain={[0, max]} allowDecimals={false} height={30} axisLine={false} tickLine={false} interval={'preserveStart'} tickCount={6}/>
-                            <Tooltip cursor={{fill: '#f7f7f7'}}/>
-                            <Bar dataKey={activeValue}>
-                                {
-                                    data.map((entry, index) => (
-                                        <Cell cursor="pointer" fill={entry.username === activeData.username ? '#edbed2' : '#adb8ff' } key={`cell-${index}`}/>
-                                    ))
-                                }
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
-                    : 
+                    <div className='search-page-data'>
+                        <ResponsiveContainer width='100%' height={data.length * 60}>
+                            <BarChart data={data} layout='vertical' key={dataKey} margin={{ top: 10, left: 10, right: 10, bottom: 10 }} onClick={(data, index) => handleBarChartClick(data, index)}>
+                                <CartesianGrid strokeDasharray="5 5" horizontal={false} />
+                                <YAxis type='category' dataKey="username" width={130}  tickLine={false}/>
+                                <XAxis type='number' domain={[0, max]} allowDecimals={false} height={30} axisLine={false} tickLine={false} interval={'preserveStart'} tickCount={6}/>
+                                <Tooltip cursor={{fill: '#f7f7f7'}}/>
+                                <Bar dataKey={activeValue}>
+                                    {
+                                        data.map((entry, index) => (
+                                            <Cell cursor="pointer" fill={entry.username === activeData.username ? '#edbed2' : '#adb8ff' } key={`cell-${index}`}/>
+                                        ))
+                                    }
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+
+                    </div>
+                        : 
                     null}
                 </div>
                 

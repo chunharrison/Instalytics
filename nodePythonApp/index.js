@@ -212,7 +212,7 @@ app.get('/api/scrape-status', (req, res) => {
       console.log('sendEmail', req.query.sendEmail, req.query.email)
       if (req.query.sendEmail === 'true' && req.query.email !== '') {
         console.log('sending email...')
-        sendEmail(req.query.email, req.query.login_user)
+        sendEmail(req.query.email, req.query.username)
       }
 
       res.status(200).send({

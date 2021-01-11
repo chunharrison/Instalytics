@@ -8,19 +8,20 @@ const TestPage = props => {
         });
     }
 
+    function PerformFBLogin() {
+        window.FB.login(function(response) {
+            console.log(response);
+        });
+    }
+
     return (
         <div>
             <button onClick={() => getFBLoginStatus()}>
                 getStatus
             </button>
-            <div class="fb-login-button"
-                data-width="" 
-                data-size="large"
-                data-button-type="continue_with" 
-                data-layout="default" 
-                data-auto-logout-link="false" 
-                data-use-continue-as="false">
-            </div>
+            <button onClick={() => PerformFBLogin()}>
+                login
+            </button>
         </div>
     )
 }

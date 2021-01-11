@@ -241,21 +241,22 @@ app.get('/api/scrape-status', (req, res) => {
 
 app.get('/api/store-metadata', (req, res) => {
     console.log('performing store-metadata!')
+    
     // the folder already exists so delete it
     if (fs.existsSync(`./data/${req.query.login_user}`)) rimraf.sync(`./data/${req.query.login_user}`)
 
     fs.mkdir(`./data/${req.query.login_user}`, {}, (err) => {
       // get the profile metadata
-      // execSync(`instagram-scraper ${req.query.login_user} --login-user ${req.query.login_user} --login-pass ${req.query.login_pass} --destination ./data/${req.query.login_user}/ --media-types none --profile-metadata`, (error, stdout, stderr) => {
-      //   if (error) {
-      //     console.error(`exec error 1: ${error}`);
-      //     fs.appendFileSync(`./data/${req.query.login_user}/error.txt`, error, (err) => {
-      //       // if (err) console.log('appendFile error', err)
-      //     });
-      //     return
-      //   }
-      // })
-      
+      execSync(`instagram-scraper ${req.query.login_user} --login-user ${req.query.login_user} --login-pass ${req.query.login_pass} --destination ./data/${req.query.login_user}/ --media-types none --profile-metadata`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`exec error 1: ${error}`);
+          fs.appendFileSync(`./data/${req.query.login_user}/error.txt`, error, (err) => {
+            // if (err) console.log('appendFile error', err)
+          });
+          return
+        }
+      })
+
 
       if (err) console.log(err)
       let fetchedDate = new Date();

@@ -10,15 +10,15 @@ import {isEmpty} from 'is-empty'
 import queryString from 'query-string';
 import { withResizeDetector } from 'react-resize-detector';
 
-import infoImg from './info.png';
-import viewsImg from './views.png';
-import postsImg from './posts.png';
-import likesImg from './likes.png';
-import commentsImg from './comments.png';
-import followersImg from './followers.png';
-import refreshImg from './refresh.png';
-import logoutImg from './logout.png';
-import downloadImg from './download.png';
+import infoImg from './src/info.png';
+import viewsImg from './src/views.png';
+import postsImg from './src/posts.png';
+import likesImg from './src/likes.png';
+import commentsImg from './src/comments.png';
+import followersImg from './src/followers.png';
+import refreshImg from './src/refresh.png';
+import logoutImg from './src/logout.png';
+import downloadImg from './src/download.png';
 import './LandingPage.css';
 
 import Excel from 'exceljs'
@@ -29,6 +29,7 @@ import * as XLSX from 'xlsx';
 const LandingPage = props => {
     //login select
     const [userType, setUserType] = useState('new');
+
     // login input 1
     const [username, setUsername] = useState('')
     const [usernameErrorMessage, setUsernameErrorMessage] = useState('')
@@ -40,6 +41,7 @@ const LandingPage = props => {
     const [sendEmail, setSendEmail] = useState(false)
     const [emailErrorMessage, setEmailErrorMessage] = useState('')
     const [storeMetadataCalled, setStoreMetadataCalled] = useState(false)
+
     // login input 2
     const [usernameCheck, setUsernameCheck] = useState('')
     const [usernameCheckErrorMessage, setUsernameCheckErrorMessage] = useState('')
@@ -189,7 +191,7 @@ const LandingPage = props => {
  
     function handleSubmit(e) {
         e.preventDefault()
-        console.log(process.env)
+        
         let goodToGo = true
 
         // check username
@@ -209,7 +211,7 @@ const LandingPage = props => {
         }
 
         // check email
-        if (sendEmail) {
+        if (sendEmail) { // get mail notification is checked
             if (email === '') {
                 goodToGo = false
                 setEmailErrorMessage("Email field is required")
@@ -219,16 +221,16 @@ const LandingPage = props => {
             } else {
                 setEmailErrorMessage('')
             }
-        } else {
+        } else { // get mail notification is unchecked
             setEmailErrorMessage('')
         }
         
         
         if (goodToGo) {
-            const options = {
+            const getDataOptions = {
                 params: {
-                    login_user: username,
-                    login_pass: password,
+                    loginUser: username,
+                    loginPass: password,
                     numPosts: numPosts
                 },
                 headers: {
@@ -238,7 +240,7 @@ const LandingPage = props => {
                     'Access-Control-Allow-Headers': '*',
                 },
             }
-            const options2 = {
+            const getScrapeStatusOptions = {
                 params: {
                     username: username,
                     sendEmail: sendEmail,
@@ -254,49 +256,81 @@ const LandingPage = props => {
 
             console.log('calling store-metadata')
             
-            axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/store-metadata', options)
+            // 
+            axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/store-metadata', getDataOptions)
                 .then(res => {
-                    // variables
-                    
-                    // setscraping(true)
-                })
-                // .catch(res => {
-                //     console.log('store-meta FAILED', res)
-                //     if (res.response) {
-                //         console.log(res.response.data.message)
-                //         setLoginErrorMessage(res.response.data.message)
-                //     } else {
-                //         console.log(res)
-                //     }
-                //     setscraping(false)
-                //     clearInterval(intervalId)
-                // })
-            setscraping(true)
-            let intervalId = setInterval(() => {
-                console.log('calling scrape-status')
-                axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/scrape-status', options2)
-                    .then(res => {
-                        console.log(res.data)
-                        if (res.data.status === 'finished') {
-                            setLoginErrorMessage('')
-                            setScrapePercentage(100)
-                            setscraping(false)
-                            clearInterval(intervalId)
+                    console.log(res.data.message)
 
-                            window.location.replace(process.env.REACT_APP_FRONTEND_ADDRESS + `/?username=${username}`)
-                        }
-                        
-                        setScrapePercentage(res.data.percentage)
-                    })
-                    .catch(err => {
+                    // set scraping status to show the loadbar
+                    setscraping(true)
+                    let intervalId = setInterval(() => {
+
+                        console.log('calling scrape-status')
+                        axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/scrape-status', getScrapeStatusOptions)
+                            .then(res => {
+                                console.log(res.data)
+                                // scraping complete
+                                if (res.data.status === 'finished') {
+                                    setLoginErrorMessage('')
+                                    setScrapePercentage(100)
+                                    setscraping(false)
+                                    clearInterval(intervalId)
+
+                                    // Scraping is complete, redirect the user to the viewing page
+                                    window.location.replace(process.env.REACT_APP_FRONTEND_ADDRESS + `/?username=${username}`)
+                                } 
+
+                                // scraping not complete
+                                else {
+                                    setScrapePercentage(res.data.percentage)
+                                }
+                            })
+                            .catch(err => {
+                                console.log(err)
+                                setscraping(false)
+                                if (err.response) {
+                                    setLoginErrorMessage(err.response.data.message)
+                                }
+                                clearInterval(intervalId)
+                            })
+                    }, 3000)
+                })
+                .catch(err => {
                         console.log(err)
                         setscraping(false)
                         if (err.response) {
                             setLoginErrorMessage(err.response.data.message)
                         }
-                        clearInterval(intervalId)
                     })
-            }, 3000)
+            
+
+            // setscraping(true)
+            // let intervalId = setInterval(() => {
+            //     console.log('calling scrape-status')
+            //     axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/scrape-status', getScrapeStatusOptions)
+            //         .then(res => {
+            //             console.log(res.data)
+            //             if (res.data.status === 'finished') {
+            //                 setLoginErrorMessage('')
+            //                 setScrapePercentage(100)
+            //                 setscraping(false)
+            //                 clearInterval(intervalId)
+
+            //                 // Scraping is complete, redirect the user to the viewing page
+            //                 window.location.replace(process.env.REACT_APP_FRONTEND_ADDRESS + `/?username=${username}`)
+            //             }
+                        
+            //             setScrapePercentage(res.data.percentage)
+            //         })
+            //         .catch(err => {
+            //             console.log(err)
+            //             setscraping(false)
+            //             if (err.response) {
+            //                 setLoginErrorMessage(err.response.data.message)
+            //             }
+            //             clearInterval(intervalId)
+            //         })
+            // }, 3000)
 
         } else {
             console.log("we need something")
@@ -454,25 +488,6 @@ const LandingPage = props => {
 
     function handleTopFiveClick() {
         setTopFiveModal(true);       
-    }
-
-    function testEmail(e) {
-        e.preventDefault()
-
-        const options = {
-            params: {
-                email: 'gethannahbakered@gmail.com',
-                uname: username
-            },
-            headers: {
-                'Access-Control-Allow-Credentials': true,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET',
-                'Access-Control-Allow-Headers': '*',
-            },
-        }
-
-        axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/test-email', options)
     }
 
     let max = Math.max.apply(Math, data.map(function(entry) { if (entry[activeValue] !== 'NaN') {return Number(entry[activeValue]);} else {return 0} }))

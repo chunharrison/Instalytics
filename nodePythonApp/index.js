@@ -10,14 +10,131 @@ const nodemailer = require('nodemailer');
 const port = 5000
 
 app.use(cors({
-  credentials: true,
-  origin: '*',
-  "Access-Control-Allow-Origin": "*",
+	credentials: true,
+	origin: '*',
+	"Access-Control-Allow-Origin": "*",
 }));
 
+// EXECUTE SCRIPTS TO RETREIVE FOLLOWER DATA & ACCOUNT INFO
+app.get('/api/store-metadata', (req, res) => {
+	console.log('performing store-metadata!')
 
-app.get('/api/test-email', (req, res) => {
-  sendEmail(req.query.email, req.query.uname)
+	// the folder already exists so delete it
+	if (fs.existsSync(`./data/${req.query.loginUser}`)) rimraf(`./data/${req.query.loginUser}`, {}, (err) => {
+		// check for errors
+		if (err) {
+			console.log('store-metadata rimraf error: ', err)
+			res.status(400).send({message: 'store-metadata rimraf error'})
+		}
+
+		// create the data directory
+		fs.mkdir(`./data/${req.query.loginUser}`, {}, (err) => {
+			// check for errors
+			if (err) {
+				console.log('store-metadata mkdir error: ', err)
+				res.status(400).send({message: 'store-metadata mkdir error'})
+			}
+
+			// STORE THE DATE THIS DATA IS BEING DOWNLOADED AT
+			let fetchedDate = new Date();
+			fetchedDate = fetchedDate.toLocaleDateString();
+			fs.writeFile(`./data/${req.query.loginUser}/date.txt`, fetchedDate.toString(), (err) => {
+				// check for errors
+				if (err) {
+					console.log('store-metadata date.txt writeFile error: ', err)
+					res.status(400).send({message: 'store-metadata date.txt writeFile error'})
+				}
+			});
+
+			// STORE THE REQUESTER ACCOUNT'S METADATA
+			execSync(`instagram-scraper ${req.query.login_user} --login-user ${req.query.login_user} --login-pass ${req.query.login_pass} --destination ./data/${req.query.login_user}/ --media-types none --profile-metadata`, (error, stdout, stderr) => {
+				if (error) {
+					console.error(`exec error 1: ${error}`);
+					fs.writeFile(`./data/${req.query.login_user}/error1.txt`, `exec error 1: ${error}`, (err) => {
+						// check for errors
+						if (err) {
+							console.log('store-metadata error1.txt writeFile error: ', err)
+							res.status(400).send({message: 'store-metadata error1.txt writeFile error'})
+						}
+					});
+					res.status(400).send({message: `exec error 1: ${error}`})
+				}
+			})
+
+			// STORE THE REQUESTER FOLLOWING'S METADATA
+			exec(`instagram-scraper --followings-input --login-user ${req.query.loginUser} --login-pass ${req.query.loginPass} --destination ./data/${req.query.loginUser}/ --media-types none --media-metadata --maximum ${req.query.numPosts} --profile-metadata`, (error, stdout, stderr) => {
+				if (error) {
+					fs.writeFile(`./data/${req.query.loginUser}/error2.txt`, `exec error 2: ${error}`, (err) => {
+						// check for errors
+						if (err) {
+							console.log('store-metadata error2.txt writeFile error: ', err)
+							res.status(400).send({message: 'store-metadata error2.txt writeFile error'})
+						}
+					});
+					res.status(400).send({message: `exec error 2: ${error}`})
+				}
+			})
+
+		})
+	})
+	
+	res.status(200).send({message: "called with no errors"}) 
+})
+
+app.get('/api/scrape-status', (req, res) => {
+	console.log('performing scrape-status!')
+
+	// check to see if we received any errors calling instagram-scraper scripts
+	if (fs.existsSync(`./data/${req.query.username}/error1.txt`) || fs.existsSync(`./data/${req.query.username}/error2.txt`)) {
+		// delete the folder
+		// rimraf.sync(`./data/${req.query.username}`)
+		res.status(400).send({message: 'Incorrect password or username'})
+		return
+	} 
+
+	// no errors from instagram-scraper scripts
+	else if (fs.existsSync(`./data/${req.query.username}/${req.query.username}.json`)) {
+
+		// grab the requester account's metadata
+		let profileMetadataJSON = require(`./data/${req.query.username}/${req.query.username}.json`)
+		// get its following count
+		let followingCount = profileMetadataJSON.GraphProfileInfo.info.following_count
+
+		// get number of files in the directory
+		const files = fs.readdirSync(`./data/${req.query.username}/`)
+		// -2 because we have date.txt and {requester's username}.txt
+		let fileCount = files.length-2
+
+		// scraping complete 
+		if (followingCount === fileCount) {
+			console.log('Scraping Complete!')
+			// email
+			if (req.query.sendEmail === 'true' && req.query.email !== '') {
+				console.log('sending email...', 'email address: ', req.query.email, 'username: ', req.query.username)
+				sendEmail(req.query.email, req.query.username)
+			}
+
+			res.status(200).send({
+				status: 'finished'
+			})
+		}
+
+		// scraping not complete
+		else {
+			let scrapePercentage = Math.ceil((fileCount / followingCount) * 100)
+			console.log('scrape-status', fileCount, followingCount)
+			res.status(200).send({
+				percentage: scrapePercentage,
+				status: 'scraping'
+			})
+		}
+	} else {
+		console.log('scrape-status', 'file not found')
+			res.status(200).send({
+			percentage: 0,
+			status: 'scraping'
+		})
+	}
 })
 
 app.get('/api/data-date', (req, res) => {
@@ -191,136 +308,6 @@ function sendEmail(respondentEmail, respondentUsername) {
     })
 }
 
-app.get('/api/scrape-status', (req, res) => {
-  console.log('performing scrape-status!')
-  // error in '/api/store-metadata'
-  if (fs.existsSync(`./data/${req.query.username}/error.txt`)) {
-    rimraf.sync(`./data/${req.query.username}`)
-    res.status(400).send({message: 'Incorrect password or username'})
-    return
-  } else if (fs.existsSync(`./data/${req.query.username}/${req.query.username}.json`)) {
-    let profileMetadataJSON = require(`./data/${req.query.username}/${req.query.username}.json`)
-    let followingCount = profileMetadataJSON.GraphProfileInfo.info.following_count
-
-    const files = fs.readdirSync(`./data/${req.query.username}/`)
-    let fileCount = files.length-2
-
-    // scraping complete
-    if (followingCount === fileCount) {
-      console.log(followingCount, fileCount)
-      // email
-      console.log('sendEmail', req.query.sendEmail, req.query.email)
-      if (req.query.sendEmail === 'true' && req.query.email !== '') {
-        console.log('sending email...')
-        sendEmail(req.query.email, req.query.username)
-      }
-
-      res.status(200).send({
-        status: 'finished'
-      })
-      return
-    }
-
-
-    let scrapePercentage = Math.ceil((fileCount / followingCount) * 100)
-    console.log('scrape-status', fileCount, followingCount)
-    res.status(200).send({
-      percentage: scrapePercentage,
-      status: 'scraping'
-    })
-    return
-    
-  } else {
-    console.log('scrape-status', 'file not found')
-    res.status(200).send({
-      percentage: 0,
-      status: 'scraping'
-    })
-  }
-})
-
-app.get('/api/store-metadata', (req, res) => {
-    console.log('performing store-metadata!')
-
-    // the folder already exists so delete it
-    if (fs.existsSync(`./data/${req.query.login_user}`)) rimraf.sync(`./data/${req.query.login_user}`)
-
-    fs.mkdir(`./data/${req.query.login_user}`, {}, (err) => {
-      // get the profile metadata
-      // execSync(`instagram-scraper ${req.query.login_user} --login-user ${req.query.login_user} --login-pass ${req.query.login_pass} --destination ./data/${req.query.login_user}/ --media-types none --profile-metadata`, (error, stdout, stderr) => {
-      //   if (error) {
-      //     console.error(`exec error 1: ${error}`);
-      //     fs.appendFileSync(`./data/${req.query.login_user}/error.txt`, error, (err) => {
-      //       // if (err) console.log('appendFile error', err)
-      //     });
-      //     return
-      //   }
-      // })
-
-
-      if (err) console.log(err)
-      let fetchedDate = new Date();
-      fetchedDate = fetchedDate.toLocaleDateString();
-
-      fs.appendFileSync(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
-        if (err) console.log('appendFile error', err)
-        fs.appendFileSync(`./data/${req.query.login_user}/error.txt`, error, (err) => {
-          // if (err) console.log('appendFile error', err)
-        });
-        return
-      });
-
-      // //file exists
-      // if (fs.existsSync(`./data/${req.query.login_user}/date.txt`)) {
-      //   fs.writeFile(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
-      //     if (err) console.log('writeFile error', err)
-      //   });
-      // } 
-      // // does not exist
-      // else {
-      //   fs.appendFile(`./data/${req.query.login_user}/date.txt`, fetchedDate.toString(), (err) => {
-      //     if (err) console.log('appendFile error', err)
-      //   });
-      // }
-
-      exec(`instagram-scraper --followings-input --login-user ${req.query.login_user} --login-pass ${req.query.login_pass} --destination ./data/${req.query.login_user}/ --media-types none --media-metadata --maximum ${req.query.numPosts} --profile-metadata`, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`exec error 2: ${error}`);
-          fs.appendFileSync(`./data/${req.query.login_user}/error.txt`, error, (err) => {
-            // if (err) console.log('appendFile error', err)
-          });
-          return
-          // res.status(400).send({message: 'Incorrect password or username'})
-        }
-
-        // const files = fs.readdirSync(`./data/${req.query.login_user}/`)
-        // if (files.length === 2) {
-        //   rimraf.sync(`./data/${req.query.login_user}`)
-
-        //   res.status(400).send({message: 'Incorrect password or username'})
-        //   return
-        // }
-
-        // // all good
-        // else {
-        //   res.status(200).send()
-        //   console.log('sendEmail', req.query.sendEmail, req.query.email)
-        //   if (req.query.sendEmail === 'true' && req.query.email !== '') {
-        //     console.log('sending email...')
-        //     sendEmail(req.query.email, req.query.login_user)
-        //   }
-        //   return
-        // }
-      })
-      // let execMetadata = exec(`instagram-scraper --followings-input --login-user ${req.query.login_user} --login-pass ${req.query.login_pass} --destination ./data/${req.query.login_user}/ --media-types none --media-metadata --maximum ${req.query.numPosts} --profile-metadata --latest`)
-      // console.log(execMetadata)
-      res.status(200).send()
-    })
-    
-
-    
-  return
-})
 
 app.get('/api/update-metadata', (req,res) => {
   console.log('performing update-metadata!')

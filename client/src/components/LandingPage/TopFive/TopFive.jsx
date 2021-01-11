@@ -3,8 +3,8 @@ import { Carousel } from 'react-responsive-carousel';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 
 import videoImg from './video.png';
-import likesImg from '../likes.png';
-import commentsImg from '../comments.png';
+import likesImg from '../src/likes.png';
+import commentsImg from '../src/comments.png';
 
 const TopFive = props => {
     return (

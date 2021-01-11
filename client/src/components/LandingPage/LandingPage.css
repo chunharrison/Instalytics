@@ -1,16 +1,16 @@
 @font-face {
     font-family: muli;
-    src: url('Muli.ttf');
+    src: url('./src/Muli.ttf');
 }
 
 @font-face {
     font-family: muli-semibold;
-    src: url('Muli-SemiBold.ttf');
+    src: url('./src/Muli-SemiBold.ttf');
 }
 
 @font-face {
     font-family: opensans-regular;
-    src: url('OpenSans-Regular.ttf');
+    src: url('./src/OpenSans-Regular.ttf');
 }
 
 body {
@@ -260,9 +260,6 @@ canvas {
 .search-page-input.refresh-password{
     border:1px solid #e6a9a2 !important;
     color:#e6a9a2 !important;
-}
-
-.search-page-check {
 }
 
 .search-page-submit {

@@ -27,6 +27,8 @@ jobs:
             echo FRONTENT_ADDRESS=https://instalytics.ca | sudo tee -a /var/www/instalytics.ca/backend/.env
             echo MAILER_LOGIN=${{ secrets.MAILER_LOGIN }} | sudo tee -a /var/www/instalytics.ca/backend/.env
             echo MAILER_PASSWORD=${{ secrets.MAILER_PASSWORD }} | sudo tee -a /var/www/instalytics.ca/backend/.env
+            echo IG_SCRAPER_LOGIN=${{ secrets.IG_SCRAPER_LOGIN }} | sudo tee -a /var/www/instalytics.ca/backend/.env
+            echo IG_SCRAPER_PASSWORD=${{ secrets.IG_SCRAPER_PASSWORD }} | sudo tee -a /var/www/instalytics.ca/backend/.env
             sudo npm install --unsafe-perm
             cd /var/www/instalytics.ca/Instalytics/client
             sudo npm install --unsafe-perm

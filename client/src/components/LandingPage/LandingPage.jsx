@@ -9,6 +9,7 @@ import validator from 'validator';
 import {isEmpty} from 'is-empty'
 import queryString from 'query-string';
 import { withResizeDetector } from 'react-resize-detector';
+import Papa from 'papaparse';
 
 import infoImg from './src/info.png';
 import viewsImg from './src/views.png';
@@ -26,11 +27,15 @@ import xl from 'excel4node'
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
 
+import ReactModal from 'react-modal';
+
 const LandingPage = props => {
     //login select
     const [userType, setUserType] = useState('new');
 
     // login input 1
+    const [followersList, setFollowersList] = useState([])
+    const [followersListErrorMessage, setFollowersListErrorMessage] = useState('')
     const [username, setUsername] = useState('')
     const [usernameErrorMessage, setUsernameErrorMessage] = useState('')
     const [password, setPassword] = useState('')
@@ -65,7 +70,11 @@ const LandingPage = props => {
     const [dataKey, setDataKey] = useState(1);
     const [topFiveModal, setTopFiveModal] = useState(false);
     const [topFiveLoading, setTopFiveLoading] = useState(false);
+
+    const [showAboutModal, setShowAboutModal] = useState(false)
     let time = 0;
+
+    
 
     useEffect(() => {
         setContext(canvasElement.current.getContext('2d'));
@@ -153,6 +162,27 @@ const LandingPage = props => {
         setUsernameCheck(e.target.value)
     }
 
+    function handleOpenAboutModal(e) {
+        setShowAboutModal(true)
+    }
+
+    function handleCloseAboutModal(e) {
+        setShowAboutModal(false)
+    }
+
+    function onFollowersListFileUpload(e) {
+        setFollowersList([])
+        let file = e.target.files[0]
+        console.log(file)
+        Papa.parse(file, {
+            header: true,
+            complete: function(results) {
+                let followers = results.data.map(a => a.username);
+                setFollowersList(followers)
+            }
+        });
+    }
+
     function getData(uName) {
         const getDataOptions = {
             params: {
@@ -191,8 +221,16 @@ const LandingPage = props => {
  
     function handleSubmit(e) {
         e.preventDefault()
-        
+        console.log(process.env.REACT_APP_BACKEND_ADDRESS)
         let goodToGo = true
+
+        // check followers
+        if (followersList === []) {
+            goodToGo = false
+            setFollowersListErrorMessage("A csv file with a column of followers is needed")
+        } else {
+            setFollowersListErrorMessage("")
+        }
 
         // check username
         if (username === '') {
@@ -202,36 +240,48 @@ const LandingPage = props => {
             setUsernameErrorMessage("")
         }
 
-        // check password
-        if (password === '') {
+        // check mail
+        if (email === '') {
             goodToGo = false
-            setPasswordErrorMessage("Password field is required")
+            setEmailErrorMessage("Email field is required")
+        } else if (!validator.isEmail(email)) {
+            goodToGo = false
+            setEmailErrorMessage("Email is invalid")
         } else {
-            setPasswordErrorMessage('')
-        }
-
-        // check email
-        if (sendEmail) { // get mail notification is checked
-            if (email === '') {
-                goodToGo = false
-                setEmailErrorMessage("Email field is required")
-            } else if (!validator.isEmail(email)) {
-                goodToGo = false
-                setEmailErrorMessage("Email is invalid")
-            } else {
-                setEmailErrorMessage('')
-            }
-        } else { // get mail notification is unchecked
             setEmailErrorMessage('')
         }
+
+        // // check password
+        // if (password === '') {
+        //     goodToGo = false
+        //     setPasswordErrorMessage("Password field is required")
+        // } else {
+        //     setPasswordErrorMessage('')
+        // }
+
+        // // check email
+        // if (sendEmail) { // get mail notification is checked
+        //     if (email === '') {
+        //         goodToGo = false
+        //         setEmailErrorMessage("Email field is required")
+        //     } else if (!validator.isEmail(email)) {
+        //         goodToGo = false
+        //         setEmailErrorMessage("Email is invalid")
+        //     } else {
+        //         setEmailErrorMessage('')
+        //     }
+        // } else { // get mail notification is unchecked
+        //     setEmailErrorMessage('')
+        // }
         
         
         if (goodToGo) {
             const getDataOptions = {
                 params: {
-                    loginUser: username,
-                    loginPass: password,
-                    numPosts: numPosts
+                    followers: followersList,
+                    username: username,
+                    numPosts: numPosts,
+                    email: email
                 },
                 headers: {
                     'Access-Control-Allow-Credentials': true,
@@ -263,37 +313,37 @@ const LandingPage = props => {
 
                     // set scraping status to show the loadbar
                     setscraping(true)
-                    let intervalId = setInterval(() => {
+                    // let intervalId = setInterval(() => {
 
-                        console.log('calling scrape-status')
-                        axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/scrape-status', getScrapeStatusOptions)
-                            .then(res => {
-                                console.log(res.data)
-                                // scraping complete
-                                if (res.data.status === 'finished') {
-                                    setLoginErrorMessage('')
-                                    setScrapePercentage(100)
-                                    setscraping(false)
-                                    clearInterval(intervalId)
+                    //     console.log('calling scrape-status')
+                    //     axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/scrape-status', getScrapeStatusOptions)
+                    //         .then(res => {
+                    //             console.log(res.data)
+                    //             // scraping complete
+                    //             if (res.data.status === 'finished') {
+                    //                 setLoginErrorMessage('')
+                    //                 setScrapePercentage(100)
+                    //                 setscraping(false)
+                    //                 clearInterval(intervalId)
 
-                                    // Scraping is complete, redirect the user to the viewing page
-                                    window.location.replace(process.env.REACT_APP_FRONTEND_ADDRESS + `/?username=${username}`)
-                                } 
+                    //                 // Scraping is complete, redirect the user to the viewing page
+                    //                 window.location.replace(process.env.REACT_APP_FRONTEND_ADDRESS + `/?username=${username}`)
+                    //             } 
 
-                                // scraping not complete
-                                else {
-                                    setScrapePercentage(res.data.percentage)
-                                }
-                            })
-                            .catch(err => {
-                                console.log(err)
-                                setscraping(false)
-                                if (err.response) {
-                                    setLoginErrorMessage(err.response.data.message)
-                                }
-                                clearInterval(intervalId)
-                            })
-                    }, 3000)
+                    //             // scraping not complete
+                    //             else {
+                    //                 setScrapePercentage(res.data.percentage)
+                    //             }
+                    //         })
+                    //         .catch(err => {
+                    //             console.log(err)
+                    //             setscraping(false)
+                    //             if (err.response) {
+                    //                 setLoginErrorMessage(err.response.data.message)
+                    //             }
+                    //             clearInterval(intervalId)
+                    //         })
+                    // }, 3000)
                 })
                 .catch(err => {
                         console.log(err)
@@ -437,7 +487,6 @@ const LandingPage = props => {
 
         setRefreshPassword('')
         setRefreshPopupShow(false)
-
         axios.get(process.env.REACT_APP_BACKEND_ADDRESS + '/api/update-metadata', options)
             .then(res => {
                 console.log(res)
@@ -518,8 +567,30 @@ const LandingPage = props => {
 
     return (
         <div className='search-page-container'>
+            <ReactModal 
+                isOpen={showAboutModal}
+                contentLabel="About Instalytics">
+                    <p>If you want to view the engagement ratings of all the people/pages you follow on Instagram, this is the app to use</p>
+                    <p>It showcases all of the account's: </p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;average number of likes vs. follower count</p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;average number of views vs. follower count</p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;average number of comments vs. follower count</p>
+                    <p>It will also show their top 5 posts out of the posts you asked the app to fetch</p>
+                    <p>&nbsp;</p>
+                    <p>Requirements: </p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;you need to export your list of followers/followings using 
+                        <span href="https://chrome.google.com/webstore/detail/export-list-of-followers/hcdbfckhdcpepllecbkaaojfgipnpbpb?hl=en">this</span>
+                        chrome extension.</p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;note that you MUST export the file as a CSV, NOTE Excel</p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;you can always provide your own CSV file but it must have a "username" column of all the accounts</p>
+                    <p>Note: </p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this will not fetch info from any PRIVATE accounts you follow</p>
+                <button onClick={e => handleCloseAboutModal(e)}>Got it!</button>
+            </ReactModal>
             <div className='nav'>
                 <p className='nav-logo'>instalytics</p>
+                <p className='nav-logo'>|</p>
+                <p className='nav-logo' onClick={e => handleOpenAboutModal(e)}>about</p>
                 <div className='nav-right'>
                     {
                         searched
@@ -552,36 +623,56 @@ const LandingPage = props => {
                             {
                                 scraping
                                 ?
-                                <div>
-                                    <div className='progress-bar'>
-                                        <div className='progress-bar-content' style={{width: `${scrapePercentage / 100 * 360}px`}}>
+                                // <div>
+                                //     <div className='progress-bar'>
+                                //         <div className='progress-bar-content' style={{width: `${scrapePercentage / 100 * 360}px`}}>
 
-                                        </div>
-                                    </div>
-                                    <p className='progress-percentage'>{scrapePercentage}%</p>
+                                //         </div>
+                                //     </div>
+                                //     <p className='progress-percentage'>{scrapePercentage}%</p>
+                                // </div>
+                                <div>
+                                    We will now send you a notification email once we are done!
                                 </div>
                                 :
                                 <form onSubmit={e => handleSubmit(e)} className='search-page-form'>
+                                    <input type="file" name="file" onChange={onFollowersListFileUpload}/>
+                                    <span className='search-page-error'>{followersListErrorMessage}</span>
+
                                     <input className='search-page-input' type="text" value={username} placeholder='Username' onChange={e => handleAccountChange(e)}/>
                                     <span className='search-page-error'>{usernameErrorMessage}</span>
-                                    <input className='search-page-input' type="password" value={password} placeholder='Password' onChange={e => handlePasswordChange(e)}/>
-                                    <span className='search-page-error'>{passwordErrorMessage}</span>
+                                    <input className='search-page-input' type="email" value={email} placeholder='Email' onChange={e => handleEmailChange(e)}
+                                        // disabled={sendEmail ? "" : "disabled"} 
+                                        // style={{opacity: `${sendEmail ? '': '0.3'}`}}
+                                        />
+                                    <span className='search-page-error'>{emailErrorMessage}</span>
+                                    {/* <input className='search-page-input' type="password" value={password} placeholder='Password' onChange={e => handlePasswordChange(e)}/>
+                                    <span className='search-page-error'>{passwordErrorMessage}</span> */}
                                     <span className='search-page-error login-error'>{loginErrorMessage}</span>
                                     <label className='search-page-dropdown-label' for="numPosts">Number of Posts:</label>
                                     <Dropdown name="numPosts" id="numPosts" options={optionsNumber} onChange={(e) => handleNumPostsChange(e)} value={'25'} placeholder="Select an option" />
                                     <div className='search-page-email-information'>
                                         <img className='search-page-email-information-image' src={infoImg} alt=""/>
                                         <div>
-                                            <p>If you choose to fetch a lot of posts, it will take a while.</p>
-                                            <p>You can opt to get off the website and have us email you when the data is ready.</p>
+                                            <p>
+                                                Due to Instagram making rapid changes to improve their securities,
+                                                the official API became difficult to use by a non-business developer such as myself.
+                                            </p>
+                                            <p>
+                                                Another option that I had to use to make this app possible is quite tedious and takes a lot of time.
+                                                This is because I had to find a way get data without using the official API while avoiding being rate limited / running into any other limitations Instagram adds.
+                                            </p>
+                                            <p>So for now, I will have to email you once the data is fetched and is ready to be viewed.</p>
                                         </div>
                                     </div>
-                                    <div className="cboxB">
+                                    {/* <div className="cboxB">
                                         <input type="checkbox" id="boxB" checked={sendEmail} onChange={e => handleEmailCheckboxChange(e)}/>
                                         <label for="boxB">Opt In</label>
-                                    </div>
-                                    <input className='search-page-input' type="email" value={email} placeholder='Email' onChange={e => handleEmailChange(e)} disabled={sendEmail ? "" : "disabled"} style={{opacity: `${sendEmail ? '': '0.3'}`}}/>
-                                    <span className='search-page-error'>{emailErrorMessage}</span>
+                                    </div> */}
+                                    {/* <input className='search-page-input' type="email" value={email} placeholder='Email' onChange={e => handleEmailChange(e)}
+                                        disabled={sendEmail ? "" : "disabled"} 
+                                        style={{opacity: `${sendEmail ? '': '0.3'}`}}/>
+                                    <span className='search-page-error'>{emailErrorMessage}</span> */}
                                     <button className='search-page-submit' type="submit">Analyze</button>
                                 </form>
                             }

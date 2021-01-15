@@ -19,65 +19,109 @@ app.use(cors({
 app.get('/api/store-metadata', (req, res) => {
 	console.log('performing store-metadata!')
 
-	// the folder already exists so delete it
-	if (fs.existsSync(`./data/${req.query.loginUser}`)) rimraf(`./data/${req.query.loginUser}`, {}, (err) => {
+	// // the folder already exists so delete it
+	// if (fs.existsSync(`./data/${req.query.username}`)) rimraf(`./data/${req.query.username}`, {}, (err) => {
+	// 	// check for errors
+	// 	if (err) {
+	// 		console.log('store-metadata rimraf error: ', err)
+	// 		res.status(400).send({message: 'store-metadata rimraf error'})
+	// 	} else {
+  //     console.log(`deleted the directory: ./data/${req.query.username} successfully`)
+  //   }
+
+	// create the data directory
+	fs.mkdir(`./data/${req.query.username}`, { recursive: true }, (err) => {
 		// check for errors
 		if (err) {
-			console.log('store-metadata rimraf error: ', err)
-			res.status(400).send({message: 'store-metadata rimraf error'})
+			console.log('store-metadata mkdir error: ', err)
+			res.status(400).send({message: 'store-metadata mkdir error'})
+		} else {
+			console.log(`created the directory: ./data/${req.query.username} successfully`)
 		}
 
-		// create the data directory
-		fs.mkdir(`./data/${req.query.loginUser}`, {}, (err) => {
+		// STORE THE DATE THIS DATA IS BEING DOWNLOADED AT
+		let fetchedDate = new Date();
+		fetchedDate = fetchedDate.toLocaleDateString();
+		fs.writeFile(`./data/${req.query.username}/date.txt`, fetchedDate.toString(), (err) => {
 			// check for errors
 			if (err) {
-				console.log('store-metadata mkdir error: ', err)
-				res.status(400).send({message: 'store-metadata mkdir error'})
+				console.log('store-metadata date.txt writeFile error: ', err)
+				res.status(400).send({message: 'store-metadata date.txt writeFile error'})
+			} else {
+				console.log(`created the file: ./data/${req.query.username}/date.txt successfully`)
 			}
+		});
 
-			// STORE THE DATE THIS DATA IS BEING DOWNLOADED AT
-			let fetchedDate = new Date();
-			fetchedDate = fetchedDate.toLocaleDateString();
-			fs.writeFile(`./data/${req.query.loginUser}/date.txt`, fetchedDate.toString(), (err) => {
-				// check for errors
-				if (err) {
-					console.log('store-metadata date.txt writeFile error: ', err)
-					res.status(400).send({message: 'store-metadata date.txt writeFile error'})
-				}
-			});
+      	// STORE THE REQUESTER ACCOUNT'S FOLLOWERS
+		// execSync(`instagram-scraper --followings-input --login-user ${process.env.IG_SCRAPER_LOGIN} --login-pass ${process.env.IG_SCRAPER_PASSWORD} --followings-output followings.txt --destination ./data/${req.query.username}/ --media-types none`, (error, stdout, stderr) => {
+		// 	// check for errors
+		// 	if (error) {
+		// 		console.error(`exec error 1: ${error}`);
+		// 		fs.writeFile(`./data/${req.query.username}/error1.txt`, error, (err) => {
+		// 			// check for errors
+		// 			if (err) {
+		// 				console.log('store-metadata error1.txt writeFile error: ', err)
+		// 				res.status(400).send({message: 'store-metadata error1.txt writeFile error'})
+		// 			} 
+		// 		});
+		// 		res.status(400).send({message: `exec error 1: ${error}`})
+		// 	} else {
+		// 		console.log(`created the file: ./data/${req.query.username}/followings.txt successfully`)
+		// 	} // if (error)
+		// })
 
-			// STORE THE REQUESTER ACCOUNT'S METADATA
-			execSync(`instagram-scraper ${req.query.login_user} --login-user ${req.query.login_user} --login-pass ${req.query.login_pass} --destination ./data/${req.query.login_user}/ --media-types none --profile-metadata`, (error, stdout, stderr) => {
-				if (error) {
-					console.error(`exec error 1: ${error}`);
-					fs.writeFile(`./data/${req.query.login_user}/error1.txt`, `exec error 1: ${error}`, (err) => {
-						// check for errors
-						if (err) {
-							console.log('store-metadata error1.txt writeFile error: ', err)
-							res.status(400).send({message: 'store-metadata error1.txt writeFile error'})
-						}
-					});
-					res.status(400).send({message: `exec error 1: ${error}`})
-				}
-			})
+		// STORE THE REQUESTER FOLLOWING'S METADATA
+		setTimeout(() => {
+		// 	fs.readFile(`./data/${req.query.username}/followings.txt`, (err, data) => {
+		// 		// check for errors
+		// 		if (err) {
+		// 			console.log('store-metadata followings.txt readFile error: ', err)
+		// 			res.status(400).send({message: 'store-metadata followings.txt readFile error'})
+		// 		} else {
+		// 			console.log(`read the file ./data/${req.query.username}/followings.txt successfully`)
+		// 		} // if (err)
 
-			// STORE THE REQUESTER FOLLOWING'S METADATA
-			exec(`instagram-scraper --followings-input --login-user ${req.query.loginUser} --login-pass ${req.query.loginPass} --destination ./data/${req.query.loginUser}/ --media-types none --media-metadata --maximum ${req.query.numPosts} --profile-metadata`, (error, stdout, stderr) => {
-				if (error) {
-					fs.writeFile(`./data/${req.query.loginUser}/error2.txt`, `exec error 2: ${error}`, (err) => {
-						// check for errors
-						if (err) {
-							console.log('store-metadata error2.txt writeFile error: ', err)
-							res.status(400).send({message: 'store-metadata error2.txt writeFile error'})
-						}
-					});
-					res.status(400).send({message: `exec error 2: ${error}`})
-				}
-			})
+				// list of followers in an array
+				// followingsArray = data.toString().split("\n")
+				followingsArray = req.query.followers
+				console.log(followingsArray)
+				var i = 0
+				
+				// run command every 1.5 min until we fetched everyone
+				let intervalId = setInterval(() => {
+					// if we get to the end OR the last follower is undefined, we are done.
+					if (i >= followingsArray.len || followingsArray[i] === 'undefined') {
+						clearInterval(intervalId)
 
-		})
+						console.log("FINISHED FETCHING! SENDING NOTIFICATION EMAIL...")
+						sendEmail(req.query.email, req.query.username)
+					}
+
+					console.log(`fetching data from account: ${followingsArray[i]}`)
+					execSync(`instagram-scraper ${followingsArray[i]} --login-user ${process.env.IG_SCRAPER_LOGIN} --login-pass ${process.env.IG_SCRAPER_PASSWORD} --destination ./data/${req.query.username}/ --media-types none --media-metadata --maximum ${req.query.numPosts} --profile-metadata`, (error, stdout, stderr) => {
+						if (error) {
+							console.error(`exec error 2: ${error}`);
+							fs.writeFile(`./data/${req.query.username}/error2.txt`, error, (err) => {
+								// check for errors
+								if (err) {
+									console.log('store-metadata error2.txt writeFile error: ', err)
+									res.status(400).send({message: 'store-metadata error2.txt writeFile error'})
+								} 
+							});
+							res.status(400).send({message: `exec error 2: ${error}`})
+						} else {
+							console.log(`fetched data from account: ${followingsArray[i]} successfully`)
+						} // if (error)
+					}) // execSync()
+					i += 1
+				}, 90000) // let intervalId = ...
+
+		// }) // fs.readFile
+
+		}, 3000);
+
 	})
-	
+
 	res.status(200).send({message: "called with no errors"}) 
 })
 
@@ -154,8 +198,7 @@ app.get('/api/data-date', (req, res) => {
 })
 
 function sendEmail(respondentEmail, respondentUsername) {
-  console.log('sendEmail', respondentEmail, respondentUsername)
-  console.log(process.env.MAILER_LOGIN, 'process.env.MAILER_PASSWORD')
+  console.log('sending email to: ', respondentEmail, 'with account name:', respondentUsername)
     var smtpTransport = nodemailer.createTransport({
         service: 'Gmail',
         port: 465,

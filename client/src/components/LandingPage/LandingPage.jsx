@@ -570,21 +570,21 @@ const LandingPage = props => {
             <ReactModal 
                 isOpen={showAboutModal}
                 contentLabel="About Instalytics">
-                    <p>If you want to view the engagement ratings of all the people/pages you follow on Instagram, this is the app to use</p>
+                    <p>If you want to view the engagement ratings of list of accounts on Instagram, this is the app to use</p>
                     <p>It showcases all of the account's: </p>
                     <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;average number of likes vs. follower count</p>
                     <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;average number of views vs. follower count</p>
                     <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;average number of comments vs. follower count</p>
-                    <p>It will also show their top 5 posts out of the posts you asked the app to fetch</p>
+                    <p>It will also show their top 5 posts</p>
                     <p>&nbsp;</p>
-                    <p>Requirements: </p>
-                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;you need to export your list of followers/followings using 
-                        <span href="https://chrome.google.com/webstore/detail/export-list-of-followers/hcdbfckhdcpepllecbkaaojfgipnpbpb?hl=en">this</span>
+                    <p>REQUIREMENTS: </p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a) You can always provide your own CSV file but it must have a "username" column of all the accounts</p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b) You need to export your list of followers/followings using 
+                        <a href="https://chrome.google.com/webstore/detail/export-list-of-followers/hcdbfckhdcpepllecbkaaojfgipnpbpb?hl=en">this</a>
                         chrome extension.</p>
-                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;note that you MUST export the file as a CSV, NOTE Excel</p>
-                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;you can always provide your own CSV file but it must have a "username" column of all the accounts</p>
-                    <p>Note: </p>
-                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this will not fetch info from any PRIVATE accounts you follow</p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- note that you MUST export the file as a CSV, not Excel</p>
+                    <p>NOTE: </p>
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this will not fetch info from any PRIVATE accounts from the list</p>
                 <button onClick={e => handleCloseAboutModal(e)}>Got it!</button>
             </ReactModal>
             <div className='nav'>

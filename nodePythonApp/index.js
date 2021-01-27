@@ -52,24 +52,6 @@ app.get('/api/store-metadata', (req, res) => {
 			}
 		});
 
-      	// STORE THE REQUESTER ACCOUNT'S FOLLOWERS
-		// execSync(`instagram-scraper --followings-input --login-user ${process.env.IG_SCRAPER_LOGIN} --login-pass ${process.env.IG_SCRAPER_PASSWORD} --followings-output followings.txt --destination ./data/${req.query.username}/ --media-types none`, (error, stdout, stderr) => {
-		// 	// check for errors
-		// 	if (error) {
-		// 		console.error(`exec error 1: ${error}`);
-		// 		fs.writeFile(`./data/${req.query.username}/error1.txt`, error, (err) => {
-		// 			// check for errors
-		// 			if (err) {
-		// 				console.log('store-metadata error1.txt writeFile error: ', err)
-		// 				res.status(400).send({message: 'store-metadata error1.txt writeFile error'})
-		// 			} 
-		// 		});
-		// 		res.status(400).send({message: `exec error 1: ${error}`})
-		// 	} else {
-		// 		console.log(`created the file: ./data/${req.query.username}/followings.txt successfully`)
-		// 	} // if (error)
-		// })
-
 		// STORE THE REQUESTER FOLLOWING'S METADATA
 		setTimeout(() => {
 		// 	fs.readFile(`./data/${req.query.username}/followings.txt`, (err, data) => {
@@ -123,62 +105,6 @@ app.get('/api/store-metadata', (req, res) => {
 	})
 
 	res.status(200).send({message: "called with no errors"}) 
-})
-
-app.get('/api/scrape-status', (req, res) => {
-	console.log('performing scrape-status!')
-
-	// check to see if we received any errors calling instagram-scraper scripts
-	if (fs.existsSync(`./data/${req.query.username}/error1.txt`) || fs.existsSync(`./data/${req.query.username}/error2.txt`)) {
-		// delete the folder
-		// rimraf.sync(`./data/${req.query.username}`)
-		res.status(400).send({message: 'Incorrect password or username'})
-		return
-	} 
-
-	// no errors from instagram-scraper scripts
-	else if (fs.existsSync(`./data/${req.query.username}/${req.query.username}.json`)) {
-
-		// grab the requester account's metadata
-		let profileMetadataJSON = require(`./data/${req.query.username}/${req.query.username}.json`)
-		// get its following count
-		let followingCount = profileMetadataJSON.GraphProfileInfo.info.following_count
-
-		// get number of files in the directory
-		const files = fs.readdirSync(`./data/${req.query.username}/`)
-		// -2 because we have date.txt and {requester's username}.txt
-		let fileCount = files.length-2
-
-		// scraping complete 
-		if (followingCount === fileCount) {
-			console.log('Scraping Complete!')
-			// email
-			if (req.query.sendEmail === 'true' && req.query.email !== '') {
-				console.log('sending email...', 'email address: ', req.query.email, 'username: ', req.query.username)
-				sendEmail(req.query.email, req.query.username)
-			}
-
-			res.status(200).send({
-				status: 'finished'
-			})
-		}
-
-		// scraping not complete
-		else {
-			let scrapePercentage = Math.ceil((fileCount / followingCount) * 100)
-			console.log('scrape-status', fileCount, followingCount)
-			res.status(200).send({
-				percentage: scrapePercentage,
-				status: 'scraping'
-			})
-		}
-	} else {
-		console.log('scrape-status', 'file not found')
-			res.status(200).send({
-			percentage: 0,
-			status: 'scraping'
-		})
-	}
 })
 
 app.get('/api/data-date', (req, res) => {
@@ -353,25 +279,25 @@ function sendEmail(respondentEmail, respondentUsername) {
 
 
 app.get('/api/update-metadata', (req,res) => {
-  console.log('performing update-metadata!')
-  console.log(req.query.username)
+  console.log('performing update-metadata!, doesnt do anything rn tho xd')
+  // console.log(req.query.username)
 
-  let fetchedDate = new Date();
-  fetchedDate = fetchedDate.toLocaleDateString();
-  fs.writeFile(`./data/${req.query.username}/date.txt`, fetchedDate.toString(), (err) => {
-    if (err) res.status(400).send({err: err});
-    console.log('The file has been saved!');
-  });
+  // let fetchedDate = new Date();
+  // fetchedDate = fetchedDate.toLocaleDateString();
+  // fs.writeFile(`./data/${req.query.username}/date.txt`, fetchedDate.toString(), (err) => {
+  //   if (err) res.status(400).send({err: err});
+  //   console.log('The file has been saved!');
+  // });
 
-  // spawn new child process to call the python script
-  exec(`instagram-scraper --followings-input --login-user ${req.query.username} --login-pass ${req.query.refreshPassword} --destination ./data/${req.query.username}/ --media-types none --media-metadata --maximum 20 --profile-metadata --latest`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
-    console.error(`stderr: ${stderr}`);
-  })
+  // // spawn new child process to call the python script
+  // exec(`instagram-scraper --followings-input --login-user ${req.query.username} --login-pass ${req.query.refreshPassword} --destination ./data/${req.query.username}/ --media-types none --media-metadata --maximum 20 --profile-metadata --latest`, (error, stdout, stderr) => {
+  //   if (error) {
+  //     console.error(`exec error: ${error}`);
+  //     return;
+  //   }
+  //   console.log(`stdout: ${stdout}`);
+  //   console.error(`stderr: ${stderr}`);
+  // })
 
   // # '--followings-output', 'followings.txt',
   // # '--latest-stamps',
